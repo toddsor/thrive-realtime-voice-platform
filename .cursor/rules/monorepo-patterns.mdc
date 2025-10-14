@@ -1,0 +1,163 @@
+---
+alwaysApply: true
+---
+
+# Monorepo Patterns and Conventions
+
+## Package Management
+
+### Workspace Structure
+
+This project uses PNPM workspaces with the following structure:
+
+- Root [package.json](mdc:package.json) defines workspaces
+- Each package has its own `package.json` and `tsconfig.json`
+- Dependencies are managed at the package level
+
+### Internal Dependencies
+
+Use workspace references for internal packages:
+
+```json
+{
+  "dependencies": {
+    "@thrive/realtime-contracts": "*",
+    "@thrive/realtime-observability": "*"
+  }
+}
+```
+
+### External Dependencies
+
+- Minimize external dependencies
+- Use exact versions for critical dependencies
+- Prefer stable, well-maintained packages
+
+## Build System
+
+### Turborepo Configuration
+
+The build pipeline is defined in [turbo.json](mdc:turbo.json):
+
+- `build` - Compiles TypeScript to JavaScript
+- `dev` - Development mode with hot reload
+- `lint` - Code linting
+- `typecheck` - TypeScript type checking
+
+### Build Dependencies
+
+```json
+{
+  "build": {
+    "dependsOn": ["^build"],
+    "outputs": ["dist/**", ".next/**"]
+  }
+}
+```
+
+## Package Patterns
+
+### Contract Package
+
+The [packages/contracts](mdc:packages/contracts) package follows strict rules:
+
+- No implementation code
+- Pure TypeScript interfaces and types
+- No external dependencies
+- Stable API (additive changes only)
+
+### Implementation Packages
+
+Each implementation package:
+
+- Depends on `@thrive/realtime-contracts`
+- Implements interfaces defined in contracts
+- Exports both interfaces and implementations
+- Follows consistent naming patterns
+
+### UI Components Package
+
+The [packages/ui-components](mdc:packages/ui-components) package:
+
+- Uses React 19 with TypeScript
+- Built on shadcn/ui primitives
+- Includes voice-specific components
+- Supports theming and accessibility
+
+## Development Workflow
+
+### Package Scripts
+
+Each package should have these scripts:
+
+```json
+{
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  }
+}
+```
+
+### TypeScript Configuration
+
+- Use `isolatedModules: true` for better build performance
+- Separate type and value exports
+- Use consistent module resolution
+
+### Code Organization
+
+- Place source files in `src/` directory
+- Export from `index.ts` for clean imports
+- Use consistent file naming conventions
+
+## Testing Strategy
+
+### Unit Tests
+
+- Test individual functions and classes
+- Mock external dependencies
+- Use TypeScript for test files
+
+### Integration Tests
+
+- Test package interactions
+- Use real implementations where possible
+- Test error handling and edge cases
+
+## Documentation
+
+### README Files
+
+Each package should have a comprehensive README:
+
+- Overview and purpose
+- Installation instructions
+- Usage examples
+- API reference
+- Dependencies and requirements
+
+### Code Comments
+
+- Document public APIs
+- Explain complex logic
+- Include usage examples in comments
+- Use JSDoc for function documentation
+
+## Deployment
+
+### Package Publishing
+
+- Use `changeset` for version management
+- Publish packages to npm registry
+- Use semantic versioning
+- Include proper package metadata
+
+### Build Artifacts
+
+- Compile TypeScript to JavaScript
+- Generate declaration files
+- Include only necessary files in package
+- Use proper file patterns in `package.json`

@@ -1,0 +1,50 @@
+---
+alwaysApply: true
+---
+
+# Thrive Realtime Voice Platform - Project Structure
+
+This is a TypeScript monorepo for a realtime voice platform built with OpenAI's Realtime API.
+
+## Architecture Overview
+
+The platform consists of several interconnected packages:
+
+- **@thrive/realtime-contracts**: Core TypeScript interfaces and types (no dependencies)
+- **@thrive/realtime-core**: Core runtime logic for realtime connections
+- **@thrive/realtime-observability**: Logging and monitoring utilities
+- **@thrive/realtime-config**: Configuration management and feature flags
+- **@thrive/realtime-auth-supabase**: Supabase authentication provider
+- **@thrive/realtime-ui-components**: React UI components (shadcn/ui based)
+- **@thrive/realtime-usage**: Usage tracking and cost estimation
+- **@thrive/realtime-security**: Security utilities and rate limiting
+- **@thrive/realtime-sre**: Site reliability engineering tools
+- **@thrive/realtime-store-prisma**: Database layer with Prisma
+- **@thrive/realtime-tool-gateway**: Tool execution with RAG support
+- **@thrive/realtime-transport-webrtc**: WebRTC transport implementation
+- **@thrive/realtime-transport-websocket**: WebSocket transport implementation
+
+## Key Files
+
+- [package.json](mdc:package.json) - Root package configuration with workspaces
+- [turbo.json](mdc:turbo.json) - Turborepo build pipeline configuration
+- [tsconfig.json](mdc:tsconfig.json) - Root TypeScript configuration
+- [pnpm-workspace.yaml](mdc:pnpm-workspace.yaml) - PNPM workspace configuration
+
+## Package Structure
+
+Each package follows this structure:
+
+- `src/` - Source TypeScript files
+- `dist/` - Compiled JavaScript output
+- `package.json` - Package configuration
+- `tsconfig.json` - Package-specific TypeScript config
+- `README.md` - Package documentation
+
+## Build System
+
+- Uses Turborepo for monorepo management
+- PNPM for package management
+- TypeScript for type safety
+- All packages build to `dist/` directory
+- Dependencies are managed at package level with workspace references

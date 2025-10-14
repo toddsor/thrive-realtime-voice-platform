@@ -1,0 +1,193 @@
+---
+globs: *.tsx,*.jsx
+---
+
+# React Component Conventions
+
+## Component Structure
+
+### File Organization
+
+- Use `.tsx` for TypeScript React components
+- Place components in `packages/ui-components/src/`
+- Export components from `index.ts` for easy importing
+
+### Component Patterns
+
+#### Basic Component Structure
+
+```tsx
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "./utils";
+
+const componentVariants = cva("base-classes", {
+  variants: {
+    variant: {
+      default: "default-classes",
+      secondary: "secondary-classes",
+    },
+    size: {
+      default: "default-size",
+      sm: "small-size",
+      lg: "large-size",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+    size: "default",
+  },
+});
+
+interface ComponentProps extends React.ComponentProps<"div">, VariantProps<typeof componentVariants> {
+  // Additional props
+}
+
+function Component({ className, variant, size, ...props }: ComponentProps) {
+  return <div className={cn(componentVariants({ variant, size, className }))} {...props} />;
+}
+
+export { Component, componentVariants };
+```
+
+#### Compound Components
+
+```tsx
+// ✅ Good compound component pattern
+function Card({ className, ...props }: React.ComponentProps<"div">) {
+  return <div className={cn("card-classes", className)} {...props} />;
+}
+
+function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return <div className={cn("card-header-classes", className)} {...props} />;
+}
+
+function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+  return <div className={cn("card-content-classes", className)} {...props} />;
+}
+
+export { Card, CardHeader, CardContent };
+```
+
+## Styling Conventions
+
+### Tailwind CSS
+
+- Use Tailwind classes for styling
+- Prefer utility classes over custom CSS
+- Use `cn()` utility for conditional classes
+
+### Class Variance Authority (CVA)
+
+- Use CVA for component variants
+- Define variants in the component file
+- Export variant functions for external use
+
+```tsx
+// ✅ Good CVA usage
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-white hover:bg-destructive/90",
+        outline: "border bg-background shadow-xs hover:bg-accent",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md gap-1.5 px-3",
+        lg: "h-10 rounded-md px-6",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
+```
+
+## Accessibility
+
+### ARIA Support
+
+- Include proper ARIA attributes
+- Support keyboard navigation
+- Use semantic HTML elements
+
+```tsx
+// ✅ Good accessibility
+function Button({ children, ...props }: ButtonProps) {
+  return (
+    <button className={cn(buttonVariants({ variant, size, className }))} aria-label={ariaLabel} {...props}>
+      {children}
+    </button>
+  );
+}
+```
+
+## TypeScript Integration
+
+### Component Props
+
+- Extend `React.ComponentProps<"element">` for base props
+- Use `VariantProps<typeof variants>` for variant props
+- Include proper TypeScript types
+
+```tsx
+// ✅ Good TypeScript integration
+interface ButtonProps extends React.ComponentProps<"button">, VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+  ariaLabel?: string;
+}
+```
+
+## Dependencies
+
+### Required Dependencies
+
+- `react` and `react-dom` as peer dependencies
+- `@radix-ui/*` for accessible primitives
+- `class-variance-authority` for variants
+- `clsx` and `tailwind-merge` for class utilities
+- `lucide-react` for icons
+
+### Import Patterns
+
+```tsx
+// ✅ Good import organization
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "./utils";
+```
+
+## Voice-Specific Components
+
+### Cost Tracking Components
+
+- Use `CostDisplay` for showing cost information
+- Use `LiveCostTracker` for real-time cost monitoring
+- Use `UsageStats` for usage statistics
+
+### Data Types
+
+```tsx
+// ✅ Good type definitions for voice components
+interface ModelPricing {
+  name: string;
+  audioInputTokens: number;
+  audioCachedTokens: number;
+  audioOutputTokens: number;
+  textInputTokens: number;
+  textCachedTokens: number;
+  textOutputTokens: number;
+  description: string;
+}
+
+interface UsageData {
+  sessionId: string;
+  // ... other usage properties
+}
+```

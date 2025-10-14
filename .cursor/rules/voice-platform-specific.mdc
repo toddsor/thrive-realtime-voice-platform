@@ -1,0 +1,207 @@
+---
+description: Voice platform specific patterns and conventions
+---
+
+# Voice Platform Specific Patterns
+
+## Realtime API Integration
+
+### Transport Layer
+
+The platform supports two transport mechanisms:
+
+- **WebRTC**: Peer-to-peer audio streaming with data channels
+- **WebSocket**: Server-mediated audio streaming
+
+### Transport Configuration
+
+```typescript
+// ✅ Good transport configuration
+const config = {
+  voice: "alloy",
+  persona: "You are a helpful AI assistant.",
+  instructions: "You are a helpful AI assistant.",
+  capabilities: ["text", "audio", "tools"],
+  featureFlags: {
+    memory: "off",
+  },
+  tools: [
+    {
+      type: "function",
+      name: "echo",
+      description: "Echoes back the provided arguments",
+      parameters: {
+        type: "object",
+        properties: {
+          message: { type: "string", description: "Message to echo back" },
+        },
+        required: ["message"],
+      },
+    },
+  ],
+};
+```
+
+### Event Handling
+
+```typescript
+// ✅ Good event handling pattern
+const router = new RealtimeEventRouter({
+  onSessionCreated: (sessionId) => console.log("Session:", sessionId),
+  onTranscript: (transcript) => console.log("Transcript:", transcript),
+  onToolCall: (toolCall) => console.log("Tool call:", toolCall),
+});
+
+// Route events from transport
+router.routeEvent(event);
+```
+
+## Audio Processing
+
+### Audio Format
+
+- Use 24kHz PCM audio encoding/decoding
+- Support real-time audio input/output
+- Handle microphone access and management
+
+### Voice Activity Detection
+
+- Server-side voice activity detection
+- Automatic audio processing
+- Real-time audio playback
+
+## Cost Management
+
+### Usage Tracking
+
+```typescript
+// ✅ Good usage tracking pattern
+interface SessionUsage {
+  sessionId: string;
+  userId: string;
+  startTime: number;
+  endTime?: number;
+  durationMs: number;
+  audioMinutes: number;
+  tokensInput: number;
+  tokensOutput: number;
+  tokensCached: number;
+  toolCalls: number;
+  retrievals: number;
+  estimatedCost: number;
+  createdAt: number;
+  updatedAt: number;
+}
+```
+
+### Cost Calculation
+
+- Track audio minutes, token usage, tool calls
+- Calculate real-time cost estimates
+- Support different pricing models
+- Handle caching discounts
+
+## Tool Integration
+
+### Tool Gateway
+
+```typescript
+// ✅ Good tool gateway pattern
+const gateway = new ToolGateway({
+  policies: {
+    maxPayloadBytes: 1024 * 1024, // 1MB
+    maxSessionDuration: 30 * 60 * 1000, // 30 minutes
+  },
+  allowList: ["echo", "retrieve"],
+  logger: console,
+});
+
+// Register tools
+gateway.register("echo", echoTool);
+gateway.register("retrieve", retrieveTool);
+```
+
+### RAG Support
+
+- Vector search and document retrieval
+- OpenAI embeddings integration
+- In-memory vector store
+- Tool handlers for retrieval
+
+## Database Schema
+
+### Session Management
+
+```prisma
+model Session {
+  id            String        @id @default(cuid())
+  userId        String?
+  user          AppUser?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  openAiSession String
+  skill         String
+  configJson    Json
+  timingsJson   Json
+  consent       Consent       @default(DECLINED)
+  startedAt     DateTime      @default(now())
+  endedAt       DateTime?
+  transcripts   Transcript[]
+  toolEvents    ToolEvent[]
+  summaries     Summary[]
+  usageEvents   UsageEvent[]
+}
+```
+
+### Data Persistence
+
+- Store session data with Prisma
+- Track transcripts and tool events
+- Manage user consent and privacy
+- Store usage statistics
+
+## Security and Privacy
+
+### User Consent
+
+```typescript
+enum Consent {
+  DECLINED
+  ACCEPTED
+}
+```
+
+### Rate Limiting
+
+- Implement rate limiting for API calls
+- Track usage per user/session
+- Enforce quota limits
+- Monitor for abuse
+
+### Authentication
+
+- Supabase integration for auth
+- User session management
+- Token-based authentication
+- Secure API endpoints
+
+## Monitoring and Observability
+
+### Logging
+
+- Structured logging with context
+- Error tracking and reporting
+- Performance monitoring
+- Usage analytics
+
+### Health Checks
+
+- Service health monitoring
+- Database connectivity
+- External API status
+- Resource utilization
+
+### Alerting
+
+- Cost threshold alerts
+- Error rate monitoring
+- Performance degradation
+- Security incidents

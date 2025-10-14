@@ -1,0 +1,276 @@
+---
+globs: *.ts,*.tsx
+---
+
+# Error Handling Patterns
+
+## Async Function Error Handling
+
+### Promise-based Functions
+
+```typescript
+// ✅ Good error handling for async functions
+export async function getAgentConfig(user: User): Promise<AgentConfig> {
+  try {
+    const config = await loadConfig(user);
+    return config;
+  } catch (error) {
+    logger.error("Failed to load agent config", {
+      error,
+      userId: user.sub,
+      tenant: user.tenant,
+    });
+    throw new Error(`Configuration loading failed: ${error.message}`);
+  }
+}
+```
+
+### Error Context
+
+Always include relevant context in error logs:
+
+```typescript
+// ✅ Good error context
+try {
+  await processSession(sessionId);
+} catch (error) {
+  logger.error("Session processing failed", {
+    error: error.message,
+    sessionId,
+    userId: session.userId,
+    timestamp: Date.now(),
+  });
+  throw error;
+}
+```
+
+## Transport Error Handling
+
+### Connection Errors
+
+```typescript
+// ✅ Good transport error handling
+export class WebRTCTransport implements Transport {
+  async connect(opts: ConnectOptions): Promise<void> {
+    try {
+      await this.establishConnection(opts);
+    } catch (error) {
+      logger.error("WebRTC connection failed", {
+        error: error.message,
+        sessionId: opts.sessionId,
+      });
+      throw new ConnectionError("Failed to establish WebRTC connection", error);
+    }
+  }
+}
+```
+
+### Reconnection Logic
+
+```typescript
+// ✅ Good reconnection pattern
+private async handleReconnection(): Promise<void> {
+  const maxRetries = 3;
+  let retryCount = 0;
+
+  while (retryCount < maxRetries) {
+    try {
+      await this.connect(this.lastConnectionOptions);
+      logger.info("Reconnection successful", { retryCount });
+      return;
+    } catch (error) {
+      retryCount++;
+      logger.warn("Reconnection attempt failed", {
+        error: error.message,
+        retryCount,
+        maxRetries
+      });
+
+      if (retryCount >= maxRetries) {
+        throw new Error("Max reconnection attempts exceeded");
+      }
+
+      await this.delay(Math.pow(2, retryCount) * 1000); // Exponential backoff
+    }
+  }
+}
+```
+
+## Validation Errors
+
+### Input Validation
+
+```typescript
+// ✅ Good input validation
+export function validateToolCall(toolCall: unknown): ToolCall {
+  if (!toolCall || typeof toolCall !== "object") {
+    throw new ValidationError("Tool call must be an object");
+  }
+
+  const { name, parameters } = toolCall as any;
+
+  if (!name || typeof name !== "string") {
+    throw new ValidationError("Tool call must have a string name");
+  }
+
+  if (!parameters || typeof parameters !== "object") {
+    throw new ValidationError("Tool call must have parameters object");
+  }
+
+  return toolCall as ToolCall;
+}
+```
+
+### Configuration Validation
+
+```typescript
+// ✅ Good configuration validation
+export function validateAgentConfig(config: unknown): AgentConfig {
+  const errors: string[] = [];
+
+  if (!config || typeof config !== "object") {
+    errors.push("Config must be an object");
+  } else {
+    const { voice, capabilities } = config as any;
+
+    if (!voice || typeof voice !== "string") {
+      errors.push("Voice must be a string");
+    }
+
+    if (!Array.isArray(capabilities)) {
+      errors.push("Capabilities must be an array");
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new ValidationError(`Invalid agent config: ${errors.join(", ")}`);
+  }
+
+  return config as AgentConfig;
+}
+```
+
+## Database Error Handling
+
+### Prisma Errors
+
+```typescript
+// ✅ Good database error handling
+export async function saveSession(session: SessionData): Promise<void> {
+  try {
+    await prisma.session.create({
+      data: {
+        id: session.id,
+        userId: session.userId,
+        openAiSession: session.openAiSession,
+        skill: session.skill,
+        configJson: session.config,
+        timingsJson: session.timings,
+        consent: session.consent,
+      },
+    });
+  } catch (error) {
+    if (error.code === "P2002") {
+      throw new ConflictError("Session already exists", { sessionId: session.id });
+    }
+
+    logger.error("Database error saving session", {
+      error: error.message,
+      sessionId: session.id,
+      userId: session.userId,
+    });
+
+    throw new DatabaseError("Failed to save session", error);
+  }
+}
+```
+
+## Custom Error Classes
+
+### Error Hierarchy
+
+```typescript
+// ✅ Good error class hierarchy
+export class ThriveError extends Error {
+  constructor(message: string, public context?: Record<string, any>) {
+    super(message);
+    this.name = this.constructor.name;
+  }
+}
+
+export class ValidationError extends ThriveError {
+  constructor(message: string, context?: Record<string, any>) {
+    super(`Validation failed: ${message}`, context);
+  }
+}
+
+export class ConnectionError extends ThriveError {
+  constructor(message: string, public originalError?: Error) {
+    super(`Connection error: ${message}`);
+  }
+}
+
+export class DatabaseError extends ThriveError {
+  constructor(message: string, public originalError?: Error) {
+    super(`Database error: ${message}`);
+  }
+}
+```
+
+## Error Recovery
+
+### Graceful Degradation
+
+```typescript
+// ✅ Good graceful degradation
+export async function processWithFallback<T>(primaryFn: () => Promise<T>, fallbackFn: () => Promise<T>): Promise<T> {
+  try {
+    return await primaryFn();
+  } catch (error) {
+    logger.warn("Primary operation failed, using fallback", {
+      error: error.message,
+    });
+
+    try {
+      return await fallbackFn();
+    } catch (fallbackError) {
+      logger.error("Both primary and fallback operations failed", {
+        primaryError: error.message,
+        fallbackError: fallbackError.message,
+      });
+      throw new Error("All processing methods failed");
+    }
+  }
+}
+```
+
+## Logging Integration
+
+### Structured Logging
+
+```typescript
+// ✅ Good structured logging
+export class Logger {
+  error(message: string, context?: Record<string, any>): void {
+    console.error(
+      JSON.stringify({
+        level: "error",
+        message,
+        timestamp: new Date().toISOString(),
+        ...context,
+      })
+    );
+  }
+
+  warn(message: string, context?: Record<string, any>): void {
+    console.warn(
+      JSON.stringify({
+        level: "warn",
+        message,
+        timestamp: new Date().toISOString(),
+        ...context,
+      })
+    );
+  }
+}
+```

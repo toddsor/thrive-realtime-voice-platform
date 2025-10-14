@@ -1,0 +1,117 @@
+---
+globs: *.ts,*.tsx
+---
+
+# TypeScript Conventions
+
+## Type Safety and Exports
+
+### Interface vs Class Exports
+
+When exporting both interfaces and implementations, separate them clearly:
+
+```typescript
+// ✅ Correct - separate type and value exports
+export { usageTracker } from "./usageTracker";
+export type { UsageTracker, SessionUsage, UserQuota } from "./usageTracker";
+
+// ❌ Incorrect - mixed exports cause isolatedModules issues
+export { UsageTracker, usageTracker } from "./usageTracker";
+```
+
+### IsolatedModules Compliance
+
+Always use explicit `export type` for type-only exports when `isolatedModules` is enabled:
+
+```typescript
+// ✅ Correct
+export type { AgentConfig, ToolCall } from "./contracts";
+
+// ❌ Incorrect
+export { AgentConfig, ToolCall } from "./contracts";
+```
+
+## Naming Conventions
+
+### Interfaces
+
+- Use PascalCase for interfaces: `AgentConfig`, `ToolCall`, `PersistenceStore`
+- Prefix with descriptive names: `WebRTCTransportConfig`, `UsageTracker`
+
+### Classes
+
+- Use PascalCase for classes: `InMemoryUsageTracker`, `RealtimeEventRouter`
+- Implement interfaces with descriptive names: `InMemory*` for in-memory implementations
+
+### Functions and Variables
+
+- Use camelCase: `initRealtime`, `createTransport`, `usageTracker`
+- Use descriptive names: `getSessionToken`, `calculateCost`
+
+## Type Definitions
+
+### Contract Package Rules
+
+The [packages/contracts](mdc:packages/contracts) package has strict rules:
+
+- No implementation code
+- Pure TypeScript interfaces and types only
+- No environment variable access
+- Stable API (additive changes only)
+- No external dependencies
+
+### Interface Design
+
+```typescript
+// ✅ Good interface design
+export interface Transport {
+  kind: TransportKind;
+  connect(opts: { token: string; onEvent: (event: unknown) => void }): Promise<void>;
+  send(event: unknown): void;
+  close(): Promise<void>;
+}
+
+// ✅ Use union types for variants
+export type EventType = "partial_transcript" | "final_transcript" | "latency_mark";
+```
+
+## Error Handling
+
+### Async Functions
+
+Always handle errors in async functions:
+
+```typescript
+// ✅ Good error handling
+export async function getAgentConfig(user: User): Promise<AgentConfig> {
+  try {
+    const config = await loadConfig(user);
+    return config;
+  } catch (error) {
+    logger.error("Failed to load agent config", { error, userId: user.sub });
+    throw new Error("Configuration loading failed");
+  }
+}
+```
+
+## Dependencies
+
+### Internal Package References
+
+Use workspace references for internal packages:
+
+```typescript
+// ✅ Correct internal dependency
+import { AgentConfig } from "@thrive/realtime-contracts";
+import { Logger } from "@thrive/realtime-observability";
+```
+
+### External Dependencies
+
+Minimize external dependencies and prefer stable APIs:
+
+```typescript
+// ✅ Good external dependency usage
+import { createClient } from "@supabase/supabase-js";
+import { cva, type VariantProps } from "class-variance-authority";
+```
