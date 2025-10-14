@@ -2,6 +2,7 @@
   "name": "thrive-realtime-voice-platform",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "npm@10.0.0",
   "workspaces": [
     "packages/*",
     "apps/*"

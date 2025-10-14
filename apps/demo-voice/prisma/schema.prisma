@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model AppUser {
+    id           String    @id @default(cuid())
+    sub          String    @unique
+    tenant       String    @default("default")
+    email        String?
+    name         String?
+    provider     String?
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+    lastSignInAt DateTime?
+
+    sessions Session[]
+}
+
+model Session {
+    id            String   @id @default(cuid())
+    userId        String?
+    openAiSession String?
+    skill         String?
+    configJson    Json?
+    timingsJson   Json?
+    consent       Consent  @default(DECLINED)
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    user        AppUser?     @relation(fields: [userId], references: [id])
+    transcripts Transcript[]
+    toolEvents  ToolEvent[]
+    summaries   Summary[]
+}
+
+model Transcript {
+    id        String   @id @default(cuid())
+    sessionId String
+    role      String
+    text      String
+    startedAt DateTime
+    endedAt   DateTime
+    createdAt DateTime @default(now())
+
+    session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model ToolEvent {
+    id         String   @id @default(cuid())
+    sessionId  String
+    name       String
+    argsJson   Json
+    resultJson Json?
+    createdAt  DateTime @default(now())
+
+    session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model Summary {
+    id        String   @id @default(cuid())
+    sessionId String
+    text      String
+    createdAt DateTime @default(now())
+
+    session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+enum Consent {
+    ACCEPTED
+    DECLINED
+}
