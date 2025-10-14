@@ -1,0 +1,26 @@
+{
+  "name": "@thrive/realtime-sre",
+  "version": "0.0.0",
+  "description": "SRE tools and monitoring for the Thrive Realtime Voice Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@thrive/realtime-contracts": "*",
+    "@thrive/realtime-observability": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@thrive/realtime-config",
+  "version": "0.0.0",
+  "description": "Configuration loader for the Thrive Realtime Voice Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@thrive/realtime-contracts": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

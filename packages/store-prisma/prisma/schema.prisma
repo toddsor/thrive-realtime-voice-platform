@@ -1,0 +1,91 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Plan {
+  FREE
+  PRO
+  TEAM
+  ENTERPRISE
+}
+
+enum Consent {
+  DECLINED
+  ACCEPTED
+}
+
+model AppUser {
+  id            String      @id @default(uuid())
+  authUserId    String      @unique
+  email         String?     @unique
+  name          String?
+  provider      String?     // google, linkedin, facebook, email
+  plan          Plan        @default(FREE)
+  consent       Consent     @default(DECLINED)
+  lastSignInAt  DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  sessions      Session[]
+}
+
+model Session {
+  id            String        @id @default(cuid())
+  userId        String?
+  user          AppUser?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  openAiSession String
+  skill         String
+  configJson    Json
+  timingsJson   Json
+  consent       Consent       @default(DECLINED)
+  startedAt     DateTime      @default(now())
+  endedAt       DateTime?
+  transcripts   Transcript[]
+  toolEvents    ToolEvent[]
+  summaries     Summary[]
+  usageEvents   UsageEvent[]
+}
+
+model Transcript {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role       String
+  text       String
+  startedAt  DateTime
+  endedAt    DateTime
+  createdAt  DateTime @default(now())
+}
+
+model Summary {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  text       String
+  createdAt  DateTime @default(now())
+}
+
+model ToolEvent {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  name       String
+  argsJson   Json
+  resultJson Json?
+  createdAt  DateTime @default(now())
+}
+
+model UsageEvent {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  kind       String
+  value      Float
+  metaJson   Json?
+  createdAt  DateTime @default(now())
+}
