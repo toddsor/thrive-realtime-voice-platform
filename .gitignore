@@ -11,6 +11,12 @@ build/
 .next/
 out/
 
+# Compiled TypeScript output in src directories
+**/src/*.js
+**/src/*.jsx
+!**/src/*.config.js
+!**/src/*.config.mjs
+
 # Turborepo cache
 .turbo/
 
