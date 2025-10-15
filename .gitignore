@@ -11,6 +11,12 @@ build/
 .next/
 out/
 
+# Turborepo cache
+.turbo/
+
+# TypeScript incremental compilation cache
+*.tsbuildinfo
+
 # Environment variables
 .env
 .env.local
