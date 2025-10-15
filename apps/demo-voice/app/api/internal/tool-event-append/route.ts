@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@thrive/realtime-lib";
 import { ConsoleLogger } from "@thrive/realtime-observability";
 
 export const runtime = "nodejs";

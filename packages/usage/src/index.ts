@@ -11,7 +11,7 @@ export type { CostRates, CostBreakdown, CostEstimate } from "./costEstimator";
 
 // Usage tracking
 export { usageTracker } from "./usageTracker";
-export type { UsageTracker, SessionUsage, UserQuota, QuotaStatus } from "./usageTracker";
+export type { UsageTracker, SessionUsage, UserQuota, QuotaStatus, UsageAggregation } from "./usageTracker";
 
 // Metrics collection
 export { metricsCollector } from "./metricsCollector";

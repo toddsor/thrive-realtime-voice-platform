@@ -31,6 +31,7 @@
     "@thrive/realtime-transport-websocket": "file:../../packages/transport-websocket",
     "@thrive/realtime-ui-components": "file:../../packages/ui-components",
     "@thrive/realtime-usage": "file:../../packages/usage",
+    "@thrive/realtime-lib": "file:../../packages/lib",
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

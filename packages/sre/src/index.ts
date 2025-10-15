@@ -45,3 +45,7 @@ export {
   allAlertRules,
   registerAllAlertRules,
 } from "./alertRules";
+
+// Usage store
+export { InMemoryUsageStore, usageStore } from "./stores/usageStore";
+export type { UsageStore } from "./stores/usageStore";

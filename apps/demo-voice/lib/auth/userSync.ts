@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@thrive/realtime-lib";
 import { User } from "./authProvider";
 
 export async function syncUserToAppUser(supabaseUser: {
