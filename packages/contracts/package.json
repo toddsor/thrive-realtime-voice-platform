@@ -1,6 +1,6 @@
 {
-  "name": "@thrive/realtime-contracts",
-  "version": "0.0.0",
+  "name": "@thrivereflections/realtime-contracts",
+  "version": "0.1.0",
   "description": "Core TypeScript interfaces and types for the Thrive Realtime Voice Platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

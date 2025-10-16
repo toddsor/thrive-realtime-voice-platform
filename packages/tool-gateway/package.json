@@ -1,6 +1,6 @@
 {
-  "name": "@thrive/realtime-tool-gateway",
-  "version": "0.0.0",
+  "name": "@thrivereflections/realtime-tool-gateway",
+  "version": "0.1.0",
   "description": "Tool gateway with RAG support for the Thrive Realtime Voice Platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +14,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@thrive/realtime-contracts": "*"
+    "@thrivereflections/realtime-contracts": "*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

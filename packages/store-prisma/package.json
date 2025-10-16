@@ -1,6 +1,6 @@
 {
-  "name": "@thrive/realtime-store-prisma",
-  "version": "0.0.0",
+  "name": "@thrivereflections/realtime-store-prisma",
+  "version": "0.1.0",
   "description": "Prisma-based persistence store for the Thrive Realtime Voice Platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
-    "@thrive/realtime-contracts": "*"
+    "@thrivereflections/realtime-contracts": "*"
   },
   "devDependencies": {
     "prisma": "^5.0.0",

@@ -1,5 +1,7 @@
 # TL;DR Getting Started
 
+> **📦 All packages are now published to npm** under the `@thrivereflections/` scope! No need to build from source.
+
 ## 1. Run the Demo (5 minutes)
 
 ```bash
@@ -31,54 +33,10 @@ cd my-voice-app
 
 ### B. Install Platform Packages
 
-Since the Thrive platform packages are internal to the monorepo, you'll need to reference them directly from the repository:
-
-Add these dependencies to your `package.json`:
-
-```json
-{
-  "dependencies": {
-    "@thrive/realtime-core": "github:toddsor/thrive-realtime-voice-platform#main:packages/core",
-    "@thrive/realtime-config": "github:toddsor/thrive-realtime-voice-platform#main:packages/config",
-    "@thrive/realtime-contracts": "github:toddsor/thrive-realtime-voice-platform#main:packages/contracts",
-    "@thrive/realtime-observability": "github:toddsor/thrive-realtime-voice-platform#main:packages/observability"
-  }
-}
-```
-
-Then run:
+Install the Thrive platform packages from npm:
 
 ```bash
-npm install
-```
-
-**Important**: Since these packages are TypeScript source code, you need to build them:
-
-```bash
-# Build the platform packages
-cd node_modules/@thrive/realtime-contracts && npm run build
-cd ../@thrive/realtime-core && npm run build
-cd ../@thrive/realtime-config && npm run build
-cd ../@thrive/realtime-observability && npm run build
-cd ../../..
-```
-
-> **Note**: The build order matters! `@thrive/realtime-contracts` must be built first because other packages depend on it.
-
-Or create a build script in your `package.json`:
-
-```json
-{
-  "scripts": {
-    "build:packages": "cd node_modules/@thrive/realtime-contracts && npm run build && cd ../@thrive/realtime-core && npm run build && cd ../@thrive/realtime-config && npm run build && cd ../@thrive/realtime-observability && npm run build && cd ../../.."
-  }
-}
-```
-
-Then run:
-
-```bash
-npm run build:packages
+npm install @thrivereflections/realtime-core @thrivereflections/realtime-config @thrivereflections/realtime-contracts @thrivereflections/realtime-observability
 ```
 
 ### C. Set Up Environment
@@ -93,8 +51,8 @@ echo OPENAI_API_KEY=your_key > .env
 // app/page.tsx
 "use client";
 import { useState, useCallback } from "react";
-import { createTransport, RealtimeEventRouter } from "@thrive/realtime-core";
-import { AgentConfig } from "@thrive/realtime-contracts";
+import { createTransport, RealtimeEventRouter } from "@thrivereflections/realtime-core";
+import { AgentConfig } from "@thrivereflections/realtime-contracts";
 
 export default function VoiceApp() {
   const [isConnected, setIsConnected] = useState(false);
@@ -163,7 +121,7 @@ export default function VoiceApp() {
 ```typescript
 // app/api/config/model/route.ts
 import { NextResponse } from "next/server";
-import { validateModel, AVAILABLE_MODELS } from "@thrive/realtime-config";
+import { validateModel, AVAILABLE_MODELS } from "@thrivereflections/realtime-config";
 
 export async function GET() {
   const result = validateModel();
@@ -190,8 +148,8 @@ export async function GET() {
 ```typescript
 // app/api/realtime/session/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { loadRuntimeConfig } from "@thrive/realtime-config";
-import { createLoggerFromEnv } from "@thrive/realtime-observability";
+import { loadRuntimeConfig } from "@thrivereflections/realtime-config";
+import { createLoggerFromEnv } from "@thrivereflections/realtime-observability";
 
 export const runtime = "edge";
 

@@ -1,6 +1,6 @@
 {
-  "name": "@thrive/realtime-config",
-  "version": "0.0.0",
+  "name": "@thrivereflections/realtime-config",
+  "version": "0.1.0",
   "description": "Configuration loader for the Thrive Realtime Voice Platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +14,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@thrive/realtime-contracts": "*"
+    "@thrivereflections/realtime-contracts": "*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

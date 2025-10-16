@@ -1,6 +1,6 @@
 {
-  "name": "@thrive/realtime-auth-supabase",
-  "version": "0.0.0",
+  "name": "@thrivereflections/realtime-auth-supabase",
+  "version": "0.1.0",
   "description": "Supabase authentication provider for the Thrive Realtime Voice Platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,8 +14,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@thrive/realtime-contracts": "*",
-    "@thrive/realtime-observability": "*",
+    "@thrivereflections/realtime-contracts": "*",
+    "@thrivereflections/realtime-observability": "*",
     "@supabase/supabase-js": "^2.75.0",
     "@supabase/ssr": "^0.7.0"
   },

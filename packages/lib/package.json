@@ -1,6 +1,6 @@
 {
-  "name": "@thrive/realtime-lib",
-  "version": "0.0.0",
+  "name": "@thrivereflections/realtime-lib",
+  "version": "0.1.0",
   "description": "Shared utilities for Thrive Realtime Voice Platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

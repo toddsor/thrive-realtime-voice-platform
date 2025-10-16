@@ -2,11 +2,13 @@
 
 The Thrive Realtime Voice Platform is organized into focused packages with clear boundaries and minimal dependencies. Each package has a single responsibility and can be used independently or in combination with other packages.
 
+> **📦 All packages are published to npm** under the `@thrivereflections/` scope and can be installed directly: `npm install @thrivereflections/realtime-core`
+
 ## Package Catalog
 
 ### Core Packages
 
-#### `@thrive/realtime-contracts`
+#### `@thrivereflections/realtime-contracts`
 
 **Purpose**: Type definitions and interfaces shared across all packages.
 
@@ -29,7 +31,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 - Additive-only modifications
 - No `process.env` access
 
-#### `@thrive/realtime-core`
+#### `@thrivereflections/realtime-core`
 
 **Purpose**: Core runtime logic for session management and transport coordination.
 
@@ -42,8 +44,8 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
-- `@thrive/realtime-observability`
+- `@thrivereflections/realtime-contracts`
+- `@thrivereflections/realtime-observability`
 
 **Rules**:
 
@@ -52,7 +54,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 - Transport-agnostic implementation
 - No external service dependencies
 
-#### `@thrive/realtime-config`
+#### `@thrivereflections/realtime-config`
 
 **Purpose**: Configuration loading and validation at the application layer.
 
@@ -65,7 +67,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
+- `@thrivereflections/realtime-contracts`
 
 **Rules**:
 
@@ -76,7 +78,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 ### Adapter Packages
 
-#### `@thrive/realtime-store-prisma`
+#### `@thrivereflections/realtime-store-prisma`
 
 **Purpose**: Database persistence adapter using Prisma ORM.
 
@@ -88,8 +90,8 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
-- `@thrive/realtime-observability`
+- `@thrivereflections/realtime-contracts`
+- `@thrivereflections/realtime-observability`
 - `@prisma/client`
 
 **Rules**:
@@ -99,7 +101,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 - PII redaction support
 - Connection pooling support
 
-#### `@thrive/realtime-auth-supabase`
+#### `@thrivereflections/realtime-auth-supabase`
 
 **Purpose**: Authentication adapter using Supabase Auth.
 
@@ -111,8 +113,8 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
-- `@thrive/realtime-observability`
+- `@thrivereflections/realtime-contracts`
+- `@thrivereflections/realtime-observability`
 - `@supabase/supabase-js`
 
 **Rules**:
@@ -122,7 +124,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 - User data synchronization
 - Session management
 
-#### `@thrive/realtime-transport-webrtc`
+#### `@thrivereflections/realtime-transport-webrtc`
 
 **Purpose**: WebRTC transport implementation for low-latency audio streaming.
 
@@ -134,8 +136,8 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
-- `@thrive/realtime-observability`
+- `@thrivereflections/realtime-contracts`
+- `@thrivereflections/realtime-observability`
 
 **Rules**:
 
@@ -144,7 +146,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 - Automatic connection management
 - Error handling and fallback
 
-#### `@thrive/realtime-transport-websocket`
+#### `@thrivereflections/realtime-transport-websocket`
 
 **Purpose**: WebSocket transport implementation for reliable audio streaming.
 
@@ -156,8 +158,8 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
-- `@thrive/realtime-observability`
+- `@thrivereflections/realtime-contracts`
+- `@thrivereflections/realtime-observability`
 
 **Rules**:
 
@@ -168,7 +170,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 ### Feature Packages
 
-#### `@thrive/realtime-tool-gateway`
+#### `@thrivereflections/realtime-tool-gateway`
 
 **Purpose**: Tool execution system with allow-list policy enforcement.
 
@@ -181,9 +183,9 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
-- `@thrive/realtime-observability`
-- `@thrive/realtime-usage`
+- `@thrivereflections/realtime-contracts`
+- `@thrivereflections/realtime-observability`
+- `@thrivereflections/realtime-usage`
 
 **Rules**:
 
@@ -192,7 +194,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 - RAG integration support
 - Usage tracking integration
 
-#### `@thrive/realtime-usage`
+#### `@thrivereflections/realtime-usage`
 
 **Purpose**: Cost tracking and analytics for OpenAI API usage.
 
@@ -205,8 +207,8 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
-- `@thrive/realtime-observability`
+- `@thrivereflections/realtime-contracts`
+- `@thrivereflections/realtime-observability`
 
 **Rules**:
 
@@ -215,7 +217,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 - Analytics and reporting
 - Multi-tenant support
 
-#### `@thrive/realtime-security`
+#### `@thrivereflections/realtime-security`
 
 **Purpose**: Security utilities and content safety features.
 
@@ -228,8 +230,8 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
-- `@thrive/realtime-observability`
+- `@thrivereflections/realtime-contracts`
+- `@thrivereflections/realtime-observability`
 
 **Rules**:
 
@@ -238,7 +240,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 - Rate limiting enforcement
 - Input validation
 
-#### `@thrive/realtime-sre`
+#### `@thrivereflections/realtime-sre`
 
 **Purpose**: Site reliability engineering tools and monitoring.
 
@@ -251,8 +253,8 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
-- `@thrive/realtime-observability`
+- `@thrivereflections/realtime-contracts`
+- `@thrivereflections/realtime-observability`
 
 **Rules**:
 
@@ -261,7 +263,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 - Circuit breaker protection
 - Synthetic monitoring
 
-#### `@thrive/realtime-observability`
+#### `@thrivereflections/realtime-observability`
 
 **Purpose**: Logging and monitoring infrastructure.
 
@@ -274,7 +276,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
+- `@thrivereflections/realtime-contracts`
 
 **Rules**:
 
@@ -285,7 +287,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 ### UI Packages
 
-#### `@thrive/realtime-ui-components`
+#### `@thrivereflections/realtime-ui-components`
 
 **Purpose**: React UI components for voice applications.
 
@@ -298,7 +300,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 **Dependencies**:
 
-- `@thrive/realtime-contracts`
+- `@thrivereflections/realtime-contracts`
 - `react`
 - `@radix-ui/*` (UI primitives)
 
@@ -309,7 +311,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 - Themeable components
 - TypeScript support
 
-#### `@thrive/realtime-lib`
+#### `@thrivereflections/realtime-lib`
 
 **Purpose**: Shared utilities and helpers.
 
@@ -335,46 +337,46 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 ## Package Relationships
 
 ```
-@thrive/realtime-contracts (no deps)
+@thrivereflections/realtime-contracts (no deps)
     ↑
-@thrive/realtime-core
+@thrivereflections/realtime-core
     ↑
-@thrive/realtime-{transport,store,auth} (adapters)
+@thrivereflections/realtime-{transport,store,auth} (adapters)
     ↑
-@thrive/realtime-{tool-gateway,usage,security,sre} (features)
+@thrivereflections/realtime-{tool-gateway,usage,security,sre} (features)
     ↑
-@thrive/realtime-ui-components (UI)
+@thrivereflections/realtime-ui-components (UI)
 ```
 
 ## Build Order
 
-When building packages manually (outside of Turborepo), respect the dependency order:
+> **Note**: All packages are pre-built and published to npm with TypeScript declarations. The build order below is only relevant for development within the monorepo or when building packages manually.
 
 ### Level 1: Foundation (no dependencies)
 
-1. **@thrive/realtime-contracts** - Pure TypeScript types and interfaces
+1. **@thrivereflections/realtime-contracts** - Pure TypeScript types and interfaces
 
 ### Level 2: Core Infrastructure (depends on contracts only)
 
-2. **@thrive/realtime-observability** - Logging and monitoring
-3. **@thrive/realtime-config** - Configuration management
-4. **@thrive/realtime-security** - Security utilities
-5. **@thrive/realtime-usage** - Usage tracking
-6. **@thrive/realtime-lib** - Shared utilities (no @thrive deps)
+2. **@thrivereflections/realtime-observability** - Logging and monitoring
+3. **@thrivereflections/realtime-config** - Configuration management
+4. **@thrivereflections/realtime-security** - Security utilities
+5. **@thrivereflections/realtime-usage** - Usage tracking
+6. **@thrivereflections/realtime-lib** - Shared utilities (no @thrive deps)
 
 ### Level 3: Core Runtime (depends on contracts + observability)
 
-7. **@thrive/realtime-core** - Core runtime logic
-8. **@thrive/realtime-transport-webrtc** - WebRTC transport
-9. **@thrive/realtime-transport-websocket** - WebSocket transport
-10. **@thrive/realtime-store-prisma** - Database persistence
-11. **@thrive/realtime-auth-supabase** - Authentication
-12. **@thrive/realtime-sre** - SRE tools
+7. **@thrivereflections/realtime-core** - Core runtime logic
+8. **@thrivereflections/realtime-transport-webrtc** - WebRTC transport
+9. **@thrivereflections/realtime-transport-websocket** - WebSocket transport
+10. **@thrivereflections/realtime-store-prisma** - Database persistence
+11. **@thrivereflections/realtime-auth-supabase** - Authentication
+12. **@thrivereflections/realtime-sre** - SRE tools
 
 ### Level 4: Features (depends on core packages)
 
-13. **@thrive/realtime-tool-gateway** - Tool execution
-14. **@thrive/realtime-ui-components** - React UI components
+13. **@thrivereflections/realtime-tool-gateway** - Tool execution
+14. **@thrivereflections/realtime-ui-components** - React UI components
 
 > **Important**: The monorepo's Turborepo configuration automatically handles build order. This is only relevant when building packages manually in standalone applications.
 
@@ -383,8 +385,8 @@ When building packages manually (outside of Turborepo), respect the dependency o
 ### Minimal Setup
 
 ```typescript
-import { initRealtime } from "@thrive/realtime-core";
-import { loadRuntimeConfig } from "@thrive/realtime-config";
+import { initRealtime } from "@thrivereflections/realtime-core";
+import { loadRuntimeConfig } from "@thrivereflections/realtime-config";
 
 const config = loadRuntimeConfig();
 const realtime = initRealtime(config, {
@@ -396,10 +398,10 @@ const realtime = initRealtime(config, {
 ### Full Platform Setup
 
 ```typescript
-import { initRealtime } from "@thrive/realtime-core";
-import { createPrismaStore } from "@thrive/realtime-store-prisma";
-import { createSupabaseAuth } from "@thrive/realtime-auth-supabase";
-import { createToolGateway } from "@thrive/realtime-tool-gateway";
+import { initRealtime } from "@thrivereflections/realtime-core";
+import { createPrismaStore } from "@thrivereflections/realtime-store-prisma";
+import { createSupabaseAuth } from "@thrivereflections/realtime-auth-supabase";
+import { createToolGateway } from "@thrivereflections/realtime-tool-gateway";
 
 const realtime = initRealtime(config, {
   getToken: () => fetchToken(),
