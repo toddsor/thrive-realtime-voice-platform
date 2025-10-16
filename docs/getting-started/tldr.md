@@ -56,19 +56,21 @@ npm install
 
 ```bash
 # Build the platform packages
-cd node_modules/@thrive/realtime-core && npm run build
+cd node_modules/@thrive/realtime-contracts && npm run build
+cd ../@thrive/realtime-core && npm run build
 cd ../@thrive/realtime-config && npm run build
-cd ../@thrive/realtime-contracts && npm run build
 cd ../@thrive/realtime-observability && npm run build
 cd ../../..
 ```
+
+> **Note**: The build order matters! `@thrive/realtime-contracts` must be built first because other packages depend on it.
 
 Or create a build script in your `package.json`:
 
 ```json
 {
   "scripts": {
-    "build:packages": "cd node_modules/@thrive/realtime-core && npm run build && cd ../@thrive/realtime-config && npm run build && cd ../@thrive/realtime-contracts && npm run build && cd ../@thrive/realtime-observability && npm run build && cd ../../.."
+    "build:packages": "cd node_modules/@thrive/realtime-contracts && npm run build && cd ../@thrive/realtime-core && npm run build && cd ../@thrive/realtime-config && npm run build && cd ../@thrive/realtime-observability && npm run build && cd ../../.."
   }
 }
 ```
