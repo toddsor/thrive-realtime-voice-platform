@@ -8,10 +8,6 @@ globs: *.tsx,*.jsx
 
 ### File Organization
 
-- Use `.tsx` for TypeScript React components
-- Place components in `packages/ui-components/src/`
-- Export components from `index.ts` for easy importing
-
 ### Component Patterns
 
 #### Basic Component Structure

@@ -1,4 +1,4 @@
-# @thrive/realtime-auth-supabase
+# @thrivereflections/realtime-auth-supabase
 
 Supabase authentication provider for the Thrive Realtime Voice Platform.
 
@@ -18,7 +18,7 @@ This package provides a complete authentication solution using Supabase Auth wit
 ## Installation
 
 ```bash
-npm install @thrive/realtime-auth-supabase
+npm install @thrivereflections/realtime-auth-supabase
 ```
 
 ## Usage
@@ -26,8 +26,12 @@ npm install @thrive/realtime-auth-supabase
 ### Basic Setup
 
 ```typescript
-import { createAuthProvider, createSupabaseClientFactory, createUserSyncService } from "@thrive/realtime-auth-supabase";
-import { InjectableConsoleLogger } from "@thrive/realtime-observability";
+import {
+  createAuthProvider,
+  createSupabaseClientFactory,
+  createUserSyncService,
+} from "@thrivereflections/realtime-auth-supabase";
+import { InjectableConsoleLogger } from "@thrivereflections/realtime-observability";
 
 // Create logger
 const logger = new InjectableConsoleLogger();
@@ -56,7 +60,7 @@ if (supabase) {
 ### User Synchronization
 
 ```typescript
-import { createUserSyncService } from "@thrive/realtime-auth-supabase";
+import { createUserSyncService } from "@thrivereflections/realtime-auth-supabase";
 
 // Create user sync service with your database store
 const userSync = createUserSyncService(yourDatabaseStore, { logger });
@@ -71,7 +75,7 @@ const user = await userSync.syncUserToAppUser(supabaseUser);
 
 ```typescript
 // lib/supabase/client.ts
-import { createSupabaseClientFactory } from "@thrive/realtime-auth-supabase";
+import { createSupabaseClientFactory } from "@thrivereflections/realtime-auth-supabase";
 
 const supabaseFactory = createSupabaseClientFactory({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -87,7 +91,7 @@ export function createClient() {
 
 ```typescript
 // lib/supabase/server.ts
-import { createSupabaseClientFactory } from "@thrive/realtime-auth-supabase";
+import { createSupabaseClientFactory } from "@thrivereflections/realtime-auth-supabase";
 import { cookies } from "next/headers";
 
 const supabaseFactory = createSupabaseClientFactory({
@@ -105,7 +109,7 @@ export async function createClient() {
 
 ```typescript
 // lib/supabase/middleware.ts
-import { createSupabaseClientFactory } from "@thrive/realtime-auth-supabase";
+import { createSupabaseClientFactory } from "@thrivereflections/realtime-auth-supabase";
 import { NextRequest } from "next/server";
 
 const supabaseFactory = createSupabaseClientFactory({
@@ -193,7 +197,7 @@ if (error) {
 The package integrates with the Thrive Realtime observability system for comprehensive logging and debugging:
 
 ```typescript
-import { InjectableConsoleLogger } from "@thrive/realtime-observability";
+import { InjectableConsoleLogger } from "@thrivereflections/realtime-observability";
 
 const logger = new InjectableConsoleLogger("auth-session");
 // Pass logger to all factory functions

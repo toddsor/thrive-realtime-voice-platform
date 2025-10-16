@@ -21,8 +21,8 @@ Use workspace references for internal packages:
 ```json
 {
   "dependencies": {
-    "@thrive/realtime-contracts": "*",
-    "@thrive/realtime-observability": "*"
+    "@thrivereflections/realtime-contracts": "*",
+    "@thrivereflections/realtime-observability": "*"
   }
 }
 ```
@@ -70,19 +70,10 @@ The [packages/contracts](mdc:packages/contracts) package follows strict rules:
 
 Each implementation package:
 
-- Depends on `@thrive/realtime-contracts`
+- Depends on `@thrivereflections/realtime-contracts`
 - Implements interfaces defined in contracts
 - Exports both interfaces and implementations
 - Follows consistent naming patterns
-
-### UI Components Package
-
-The [packages/ui-components](mdc:packages/ui-components) package:
-
-- Uses React 19 with TypeScript
-- Built on shadcn/ui primitives
-- Includes voice-specific components
-- Supports theming and accessibility
 
 ## Development Workflow
 

@@ -51,6 +51,7 @@ This demo app demonstrates the [Multi-App Schema Extension Pattern](../../docs/a
 ### Demo-Specific Tables
 
 #### `DemoSession`
+
 - `id` - UUID primary key
 - `userId` - User identifier (references `AppUser`)
 - `sessionName` - Human-readable session name
@@ -61,6 +62,7 @@ This demo app demonstrates the [Multi-App Schema Extension Pattern](../../docs/a
 - `updatedAt` - Timestamp
 
 #### `DemoFeedback`
+
 - `id` - UUID primary key
 - `sessionId` - Reference to DemoSession
 - `userId` - User identifier
@@ -172,7 +174,6 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - `@thrivereflections/realtime-usage` - Cost tracking and analytics
 - `@thrivereflections/realtime-security` - Security and content safety
 - `@thrivereflections/realtime-sre` - SRE tools and monitoring
-- `@thrivereflections/realtime-ui-components` - UI components
 
 ### Application Structure
 
@@ -291,7 +292,7 @@ npm run lint
 ### Custom UI Components
 
 1. Add components to `components/ui/`
-2. Import from `@thrivereflections/realtime-ui-components`
+2. Use standard React components and shadcn/ui primitives
 3. Use in your application
 
 ### Custom Authentication

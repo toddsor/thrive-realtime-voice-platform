@@ -26,20 +26,19 @@ The Thrive Realtime Voice Platform provides a comprehensive set of packages and 
 
 ## Packages
 
-- **@thrive/realtime-contracts** - Core TypeScript interfaces
-- **@thrive/realtime-core** - Core runtime logic
-- **@thrive/realtime-transport-websocket** - WebSocket transport
-- **@thrive/realtime-transport-webrtc** - WebRTC transport
-- **@thrive/realtime-tool-gateway** - Tool execution with RAG
-- **@thrive/realtime-observability** - Logging and monitoring
-- **@thrive/realtime-sre** - Site reliability engineering
-- **@thrive/realtime-usage** - Usage tracking and cost estimation
-- **@thrive/realtime-security** - Security utilities
-- **@thrive/realtime-config** - Configuration management
-- **@thrive/realtime-auth-supabase** - Supabase authentication
-- **@thrive/realtime-store-prisma** - Prisma database layer
-- **@thrive/realtime-ui-components** - React UI components
-- **@thrive/realtime-lib** - Shared utilities
+- **@thrivereflections/realtime-contracts** - Core TypeScript interfaces
+- **@thrivereflections/realtime-core** - Core runtime logic
+- **@thrivereflections/realtime-transport-websocket** - WebSocket transport
+- **@thrivereflections/realtime-transport-webrtc** - WebRTC transport
+- **@thrivereflections/realtime-tool-gateway** - Tool execution with RAG
+- **@thrivereflections/realtime-observability** - Logging and monitoring
+- **@thrivereflections/realtime-sre** - Site reliability engineering
+- **@thrivereflections/realtime-usage** - Usage tracking and cost estimation
+- **@thrivereflections/realtime-security** - Security utilities
+- **@thrivereflections/realtime-config** - Configuration management
+- **@thrivereflections/realtime-auth-supabase** - Supabase authentication
+- **@thrivereflections/realtime-store-prisma** - Prisma database layer
+- **@thrivereflections/realtime-lib** - Shared utilities
 
 ## Applications
 

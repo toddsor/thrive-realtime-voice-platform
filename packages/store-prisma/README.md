@@ -1,4 +1,4 @@
-# @thrive/realtime-store-prisma
+# @thrivereflections/realtime-store-prisma
 
 Prisma-based persistence store for the Thrive Realtime Voice Platform.
 
@@ -17,7 +17,7 @@ This package provides a Prisma-based implementation of the `PersistenceStore` in
 ## Installation
 
 ```bash
-pnpm add @thrive/realtime-store-prisma
+pnpm add @thrivereflections/realtime-store-prisma
 ```
 
 ## Usage
@@ -25,16 +25,16 @@ pnpm add @thrive/realtime-store-prisma
 ### Basic Setup
 
 ```typescript
-import { createPrismaStore } from "@thrive/realtime-store-prisma";
-import { redact } from "@thrive/realtime-security";
+import { createPrismaStore } from "@thrivereflections/realtime-store-prisma";
+import { redact } from "@thrivereflections/realtime-security";
 
 const config = {
   databaseUrl: process.env.DATABASE_URL!,
-  logLevel: "warn" as const
+  logLevel: "warn" as const,
 };
 
 const deps = {
-  redact: redact
+  redact: redact,
 };
 
 const store = createPrismaStore(config, deps);
@@ -43,17 +43,20 @@ const store = createPrismaStore(config, deps);
 ### Database Setup
 
 1. **Install Prisma CLI**:
+
    ```bash
    pnpm add -D prisma
    ```
 
 2. **Set up environment variables**:
+
    ```env
    DATABASE_URL="postgresql://user:password@localhost:5432/voice_app"
    DIRECT_URL="postgresql://user:password@localhost:5432/voice_app"
    ```
 
 3. **Generate Prisma client**:
+
    ```bash
    pnpm db:generate
    ```
@@ -69,7 +72,7 @@ The store accepts the following configuration:
 
 ```typescript
 interface PrismaStoreConfig {
-  databaseUrl: string;           // PostgreSQL connection string
+  databaseUrl: string; // PostgreSQL connection string
   logLevel?: "error" | "warn" | "info" | "query"; // Prisma log level
 }
 ```
@@ -91,6 +94,7 @@ interface PrismaStoreDeps {
 Creates a Prisma-based persistence store.
 
 **Parameters:**
+
 - `config`: Database configuration
 - `deps`: Required dependencies (redaction function)
 
@@ -166,7 +170,7 @@ DATABASE_URL="postgresql://..." pnpm test
 ## Dependencies
 
 - `@prisma/client`: Prisma database client
-- `@thrive/realtime-contracts`: Shared type definitions
+- `@thrivereflections/realtime-contracts`: Shared type definitions
 
 ## License
 

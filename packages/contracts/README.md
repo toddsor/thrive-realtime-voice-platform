@@ -1,4 +1,4 @@
-# @thrive/realtime-contracts
+# @thrivereflections/realtime-contracts
 
 Core TypeScript interfaces and types for the Thrive Realtime Voice Platform.
 
@@ -16,13 +16,13 @@ This package contains all the shared TypeScript interfaces and types used across
 ## Installation
 
 ```bash
-pnpm add @thrive/realtime-contracts
+pnpm add @thrivereflections/realtime-contracts
 ```
 
 ## Usage
 
 ```typescript
-import { AgentConfig, ToolCall, PersistenceStore } from '@thrive/realtime-contracts';
+import { AgentConfig, ToolCall, PersistenceStore } from "@thrivereflections/realtime-contracts";
 
 // Use the types in your application
 const config: AgentConfig = {

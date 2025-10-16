@@ -29,7 +29,7 @@ function initRealtime(config: RuntimeConfig) {
 
 **Problem**: Package interfaces change frequently, breaking downstream applications.
 
-**Solution**: Stable contracts in `@thrive/realtime-contracts` provide compile-time safety and enable additive-only changes.
+**Solution**: Stable contracts in `@thrivereflections/realtime-contracts` provide compile-time safety and enable additive-only changes.
 
 ```typescript
 // contracts/types.ts
@@ -100,29 +100,32 @@ export function createMemoryStore(): Store {
 ```typescript
 // Safe defaults
 const config = {
-  enablePIIRedaction: true,  // Default: enabled
-  maxSessionDuration: 30 * 60 * 1000,  // 30 minutes
-  rateLimitPerMinute: 60,  // Conservative default
-  allowUnsafeToolExecution: false,  // Explicit opt-in required
-  ...userConfig
+  enablePIIRedaction: true, // Default: enabled
+  maxSessionDuration: 30 * 60 * 1000, // 30 minutes
+  rateLimitPerMinute: 60, // Conservative default
+  allowUnsafeToolExecution: false, // Explicit opt-in required
+  ...userConfig,
 };
 ```
 
 ## Package Design Rules
 
-### Contract Package (`@thrive/realtime-contracts`)
+### Contract Package (`@thrivereflections/realtime-contracts`)
+
 - **No runtime dependencies** - Pure TypeScript interfaces
 - **Backward-compatible changes only** - Additive modifications
 - **No `process.env` access** - Environment-agnostic
 - **Stable interfaces** - Breaking changes require major version bump
 
-### Core Package (`@thrive/realtime-core`)
+### Core Package (`@thrivereflections/realtime-core`)
+
 - **No direct environment access** - Configuration via injection
 - **Transport-agnostic implementation** - Works with any transport
 - **No external service dependencies** - Pure business logic
 - **Testable by design** - All dependencies injected
 
 ### Adapter Packages
+
 - **Single responsibility** - One external integration per package
 - **Interface compliance** - Must implement contracts exactly
 - **Configuration-driven** - Behavior controlled by config objects

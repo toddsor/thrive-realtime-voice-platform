@@ -1,4 +1,4 @@
-# @thrive/realtime-tool-gateway
+# @thrivereflections/realtime-tool-gateway
 
 Tool gateway with RAG support for the Thrive Realtime Voice Platform.
 
@@ -13,7 +13,7 @@ Tool gateway with RAG support for the Thrive Realtime Voice Platform.
 ## Usage
 
 ```typescript
-import { ToolGateway, createVectorStore, echoTool, retrieveTool } from "@thrive/realtime-tool-gateway";
+import { ToolGateway, createVectorStore, echoTool, retrieveTool } from "@thrivereflections/realtime-tool-gateway";
 
 // Create vector store for RAG
 const vectorStore = createVectorStore(process.env.OPENAI_API_KEY);

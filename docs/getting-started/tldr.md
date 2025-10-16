@@ -122,7 +122,7 @@ export default function VoiceApp() {
       // Connect to voice session
       await transport.connect({
         token: "dummy-token", // Transport will fetch its own token
-        onEvent: (event: RealtimeEvent) => eventRouter.routeEvent(event),
+        onEvent: (event: unknown) => eventRouter.routeEvent(event as RealtimeEvent),
       });
     } catch (error) {
       console.error("Connection failed:", error);

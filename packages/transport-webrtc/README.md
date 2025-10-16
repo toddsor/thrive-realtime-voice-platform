@@ -1,4 +1,4 @@
-# @thrive/realtime-transport-webrtc
+# @thrivereflections/realtime-transport-webrtc
 
 WebRTC transport implementation for the Thrive Realtime Voice Platform.
 
@@ -18,7 +18,7 @@ This package provides a WebRTC-based transport for real-time voice communication
 ## Installation
 
 ```bash
-pnpm add @thrive/realtime-transport-webrtc
+pnpm add @thrivereflections/realtime-transport-webrtc
 ```
 
 ## Usage
@@ -26,7 +26,7 @@ pnpm add @thrive/realtime-transport-webrtc
 ### Basic Setup
 
 ```typescript
-import { createWebRTCTransport } from "@thrive/realtime-transport-webrtc";
+import { createWebRTCTransport } from "@thrivereflections/realtime-transport-webrtc";
 
 const config = {
   voice: "alloy",
@@ -34,7 +34,7 @@ const config = {
   instructions: "You are a helpful AI assistant.",
   capabilities: ["text", "audio", "tools"],
   featureFlags: {
-    memory: "off"
+    memory: "off",
   },
   tools: [
     {
@@ -44,12 +44,12 @@ const config = {
       parameters: {
         type: "object",
         properties: {
-          message: { type: "string", description: "Message to echo back" }
+          message: { type: "string", description: "Message to echo back" },
         },
-        required: ["message"]
-      }
-    }
-  ]
+        required: ["message"],
+      },
+    },
+  ],
 };
 
 const deps = {
@@ -57,10 +57,10 @@ const deps = {
     const response = await fetch("/api/realtime/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(config)
+      body: JSON.stringify(config),
     });
     return response.json();
-  }
+  },
 };
 
 const transport = createWebRTCTransport(config, deps);
@@ -68,7 +68,7 @@ const transport = createWebRTCTransport(config, deps);
 // Connect to the transport
 await transport.connect({
   token: "your-token",
-  onEvent: (event) => console.log("Event:", event)
+  onEvent: (event) => console.log("Event:", event),
 });
 
 // Send events
@@ -77,8 +77,8 @@ transport.send({
   item: {
     type: "message",
     role: "user",
-    content: "Hello!"
-  }
+    content: "Hello!",
+  },
 });
 
 // Close connection
@@ -91,14 +91,16 @@ The transport accepts the following configuration:
 
 ```typescript
 interface WebRTCTransportConfig {
-  voice?: string;                    // Voice model (e.g., "alloy")
-  persona?: string;                  // AI persona description
-  instructions?: string;             // System instructions
-  capabilities?: string[];           // Supported capabilities
-  featureFlags?: {                   // Feature flags
+  voice?: string; // Voice model (e.g., "alloy")
+  persona?: string; // AI persona description
+  instructions?: string; // System instructions
+  capabilities?: string[]; // Supported capabilities
+  featureFlags?: {
+    // Feature flags
     memory?: string;
   };
-  tools?: Array<{                    // Available tools
+  tools?: Array<{
+    // Available tools
     type: string;
     name: string;
     description: string;
@@ -128,6 +130,7 @@ interface WebRTCTransportDeps {
 Creates a WebRTC transport instance.
 
 **Parameters:**
+
 - `config`: Transport configuration
 - `deps`: Required dependencies
 
@@ -145,7 +148,7 @@ The transport implements the `Transport` interface:
 
 ```typescript
 interface ConnectOptions {
-  token: string;                     // Authentication token
+  token: string; // Authentication token
   onEvent: (event: unknown) => void; // Event handler
 }
 ```
@@ -235,7 +238,7 @@ pnpm test:browser
 
 ## Dependencies
 
-- `@thrive/realtime-contracts`: Shared type definitions
+- `@thrivereflections/realtime-contracts`: Shared type definitions
 
 ## License
 

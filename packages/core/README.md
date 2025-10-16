@@ -1,4 +1,4 @@
-# @thrive/realtime-core
+# @thrivereflections/realtime-core
 
 Core runtime logic for the Thrive Realtime Voice Platform.
 
@@ -14,7 +14,7 @@ This package contains the core runtime logic for real-time voice communication, 
 ## Installation
 
 ```bash
-pnpm add @thrive/realtime-core
+pnpm add @thrivereflections/realtime-core
 ```
 
 ## Usage
@@ -22,19 +22,19 @@ pnpm add @thrive/realtime-core
 ### Basic Setup
 
 ```typescript
-import { initRealtime, createTransport } from "@thrive/realtime-core";
+import { initRealtime, createTransport } from "@thrivereflections/realtime-core";
 
 const config = {
   featureFlags: {
-    transport: "webrtc" as const
-  }
+    transport: "webrtc" as const,
+  },
 };
 
 const deps = {
   getToken: async () => "your-token",
   transportFactory: createTransport,
   onEvent: (event) => console.log("Event:", event),
-  logger: yourLogger
+  logger: yourLogger,
 };
 
 const realtime = initRealtime(config, deps);
@@ -44,12 +44,12 @@ await realtime.start();
 ### Event Router
 
 ```typescript
-import { RealtimeEventRouter } from "@thrive/realtime-core";
+import { RealtimeEventRouter } from "@thrivereflections/realtime-core";
 
 const router = new RealtimeEventRouter({
   onSessionCreated: (sessionId) => console.log("Session:", sessionId),
   onTranscript: (transcript) => console.log("Transcript:", transcript),
-  onToolCall: (toolCall) => console.log("Tool call:", toolCall)
+  onToolCall: (toolCall) => console.log("Tool call:", toolCall),
 });
 
 // Route events from your transport
@@ -63,6 +63,7 @@ router.routeEvent(event);
 Initializes a realtime connection with dependency injection.
 
 **Parameters:**
+
 - `config`: Runtime configuration object
 - `deps`: Dependencies object with required methods
 
@@ -73,6 +74,7 @@ Initializes a realtime connection with dependency injection.
 Creates a transport instance for the specified kind.
 
 **Parameters:**
+
 - `kind`: Transport kind ("webrtc" or "websocket")
 
 **Returns:** Transport instance
@@ -82,12 +84,13 @@ Creates a transport instance for the specified kind.
 Class for routing and handling OpenAI Realtime API events.
 
 **Methods:**
+
 - `routeEvent(event)`: Route an event to appropriate handlers
 - `reset()`: Reset router state
 
 ## Dependencies
 
-- `@thrive/realtime-contracts`: Shared type definitions
+- `@thrivereflections/realtime-contracts`: Shared type definitions
 
 ## License
 

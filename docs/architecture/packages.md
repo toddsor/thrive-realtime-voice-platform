@@ -285,31 +285,7 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 - Request correlation
 - Multiple output formats
 
-### UI Packages
-
-#### `@thrivereflections/realtime-ui-components`
-
-**Purpose**: React UI components for voice applications.
-
-**Key Exports**:
-
-- `VoiceInterface` - Main voice UI component
-- `TranscriptDisplay` - Live transcript display
-- `CostTracker` - Usage cost display
-- `ConnectionStatus` - Connection status indicator
-
-**Dependencies**:
-
-- `@thrivereflections/realtime-contracts`
-- `react`
-- `@radix-ui/*` (UI primitives)
-
-**Rules**:
-
-- React 19 compatible
-- Accessible by default
-- Themeable components
-- TypeScript support
+### Utility Packages
 
 #### `@thrivereflections/realtime-lib`
 
@@ -344,8 +320,6 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 @thrivereflections/realtime-{transport,store,auth} (adapters)
     ↑
 @thrivereflections/realtime-{tool-gateway,usage,security,sre} (features)
-    ↑
-@thrivereflections/realtime-ui-components (UI)
 ```
 
 ## Build Order
@@ -376,7 +350,6 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 ### Level 4: Features (depends on core packages)
 
 13. **@thrivereflections/realtime-tool-gateway** - Tool execution
-14. **@thrivereflections/realtime-ui-components** - React UI components
 
 > **Important**: The monorepo's Turborepo configuration automatically handles build order. This is only relevant when building packages manually in standalone applications.
 
