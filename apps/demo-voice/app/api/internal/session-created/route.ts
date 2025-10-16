@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@thrive/realtime-lib";
+import { demoStore } from "@/lib/store";
 import { ConsoleLogger } from "@thrive/realtime-observability";
 
 export const runtime = "nodejs";
@@ -18,35 +18,14 @@ export async function POST(request: NextRequest) {
 
     logger.info("Session persistence requested", { sessionId, consent, authUserId });
 
-    // Check if database is available
-    if (!prisma) {
-      logger.warn("Database not available, skipping session persistence", { sessionId });
-      return NextResponse.json({ success: true, skipped: true, reason: "Database not available" });
-    }
-
-    // Check for existing session
-    const existingSession = await prisma.session.findUnique({
-      where: { id: sessionId },
-      select: { id: true },
-    });
-
-    if (existingSession) {
-      logger.info("Session already exists, skipping creation", { sessionId });
-      return NextResponse.json({ success: true, skipped: true });
-    }
-
-    // Create new session
-    await prisma.session.create({
-      data: {
-        id: sessionId,
-        userId: authUserId, // Use the Supabase auth user ID
-        openAiSession: timings.providerSessionId,
-        skill: config.persona || "default",
-        configJson: config as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        timingsJson: timings as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        consent: consent as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-      },
-    });
+    // Use the platform's store interface for session creation
+    await demoStore.saveSessionMeta(
+      sessionId,
+      authUserId ? { appUserId: authUserId, authUserId } : null,
+      config,
+      timings,
+      consent
+    );
 
     logger.info("Session created successfully", { sessionId, consent });
     return NextResponse.json({ success: true });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@thrive/realtime-lib";
+import { demoStore } from "@/lib/store";
 import { ConsoleLogger } from "@thrive/realtime-observability";
 import { redact } from "@thrive/realtime-security";
 
@@ -17,45 +17,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Check if prisma is available
-    if (!prisma) {
-      logger.warn("Database not available, skipping transcript persistence", { sessionId });
-      return NextResponse.json({ success: true, skipped: true });
-    }
-
-    // Check session consent
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-      select: { consent: true },
-    });
-
-    if (session?.consent !== "ACCEPTED") {
-      logger.info("Session consent not accepted, skipping transcript persistence", { sessionId });
-      return NextResponse.json({ success: true, skipped: true });
-    }
-
-    // Redact PII and create transcript
-    const text = redact(transcript.text);
-    const startedAt = transcript.startedAt ? new Date(transcript.startedAt) : new Date();
-    const endedAt = transcript.endedAt ? new Date(transcript.endedAt) : new Date();
-
-    if (isNaN(startedAt.getTime())) {
-      logger.warn("Invalid startedAt, using current time", { sessionId });
-      startedAt.setTime(Date.now());
-    }
-    if (isNaN(endedAt.getTime())) {
-      logger.warn("Invalid endedAt, using current time", { sessionId });
-      endedAt.setTime(Date.now());
-    }
-
-    await prisma.transcript.create({
-      data: {
-        sessionId,
-        role: transcript.role,
-        text,
-        startedAt,
-        endedAt,
-      },
+    // Use the platform's store interface for transcript appending
+    await demoStore.appendTranscript(sessionId, {
+      role: transcript.role,
+      text: transcript.text,
+      startedAt: transcript.startedAt,
+      endedAt: transcript.endedAt,
     });
 
     logger.info("Transcript appended successfully", { sessionId });

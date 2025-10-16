@@ -1,4 +1,4 @@
-import { prisma } from "@thrive/realtime-lib";
+import { demoStore } from "@/lib/store";
 import { User } from "./authProvider";
 
 export async function syncUserToAppUser(supabaseUser: {
@@ -14,48 +14,20 @@ export async function syncUserToAppUser(supabaseUser: {
       return null;
     }
 
-    if (!prisma) {
-      console.log("Database not available, skipping user sync");
-      return null;
-    }
-
     const userData = {
-      sub: supabaseUser.id,
+      authUserId: supabaseUser.id,
       email: supabaseUser.email,
       name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name,
       provider: supabaseUser.app_metadata?.provider || "email",
-      lastSignInAt: new Date(),
     };
 
-    // Try to find existing user
-    const existingUser = await prisma.appUser.findUnique({
-      where: { sub: supabaseUser.id },
-    });
-
-    let appUser;
-    if (existingUser) {
-      // Update existing user
-      appUser = await prisma.appUser.update({
-        where: { sub: supabaseUser.id },
-        data: {
-          email: userData.email,
-          name: userData.name,
-          provider: userData.provider,
-          lastSignInAt: userData.lastSignInAt,
-          updatedAt: new Date(),
-        },
-      });
-    } else {
-      // Create new user
-      appUser = await prisma.appUser.create({
-        data: userData,
-      });
-    }
+    // Use the platform's store adapter
+    const appUser = await demoStore.createOrUpdateUser(userData);
 
     // Return User object in expected format
     return {
-      sub: appUser.sub,
-      tenant: appUser.tenant,
+      sub: appUser.authUserId,
+      tenant: appUser.id, // Use id as tenant
       email: appUser.email || undefined,
       name: appUser.name || undefined,
       provider: appUser.provider || undefined,
@@ -68,22 +40,15 @@ export async function syncUserToAppUser(supabaseUser: {
 
 export async function getUserByAuthId(authUserId: string): Promise<User | null> {
   try {
-    if (!prisma) {
-      console.log("Database not available, skipping user lookup");
-      return null;
-    }
-
-    const appUser = await prisma.appUser.findUnique({
-      where: { sub: authUserId },
-    });
+    const appUser = await demoStore.getUserByAuthId(authUserId);
 
     if (!appUser) {
       return null;
     }
 
     return {
-      sub: appUser.sub,
-      tenant: appUser.tenant,
+      sub: appUser.authUserId,
+      tenant: appUser.id, // Use id as tenant
       email: appUser.email || undefined,
       name: appUser.name || undefined,
       provider: appUser.provider || undefined,

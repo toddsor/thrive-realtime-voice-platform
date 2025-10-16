@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@thrive/realtime-lib";
+import { demoStore } from "@/lib/store";
 import { ConsoleLogger } from "@thrive/realtime-observability";
 
 export const runtime = "nodejs";
@@ -16,32 +16,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Check if prisma is available
-    if (!prisma) {
-      logger.warn("Database not available, skipping tool event persistence", { sessionId });
-      return NextResponse.json({ success: true, skipped: true });
-    }
-
-    // Check session consent
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-      select: { consent: true },
-    });
-
-    if (session?.consent !== "ACCEPTED") {
-      logger.info("Session consent not accepted, skipping tool event persistence", { sessionId });
-      return NextResponse.json({ success: true, skipped: true });
-    }
-
-    // Create tool event
-    await prisma.toolEvent.create({
-      data: {
-        sessionId,
-        name: toolEvent.name,
-        argsJson: toolEvent.args as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        resultJson: toolEvent.result as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-      },
-    });
+    // Use the platform's store interface for tool event appending
+    await demoStore.appendToolEvent(sessionId, toolEvent);
 
     logger.info("Tool event appended successfully", { sessionId, toolName: toolEvent.name });
     return NextResponse.json({ success: true });

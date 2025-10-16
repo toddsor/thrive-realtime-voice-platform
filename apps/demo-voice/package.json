@@ -17,7 +17,7 @@
     "db:reset": "prisma migrate reset --schema=./prisma/schema.prisma"
   },
   "dependencies": {
-    "@prisma/client": "^6.0.1",
+    "@prisma/client": "^6.17.1",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-checkbox": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.2",
@@ -30,11 +30,10 @@
     "@thrive/realtime-config": "file:../../packages/config",
     "@thrive/realtime-contracts": "file:../../packages/contracts",
     "@thrive/realtime-core": "file:../../packages/core",
-    "@thrive/realtime-lib": "file:../../packages/lib",
+    "@thrive/realtime-store-prisma": "file:../../packages/store-prisma",
     "@thrive/realtime-observability": "file:../../packages/observability",
     "@thrive/realtime-security": "file:../../packages/security",
     "@thrive/realtime-sre": "file:../../packages/sre",
-    "@thrive/realtime-store-prisma": "file:../../packages/store-prisma",
     "@thrive/realtime-tool-gateway": "file:../../packages/tool-gateway",
     "@thrive/realtime-transport-webrtc": "file:../../packages/transport-webrtc",
     "@thrive/realtime-transport-websocket": "file:../../packages/transport-websocket",
