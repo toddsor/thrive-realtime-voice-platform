@@ -26,8 +26,8 @@ npm run dev
 ### A. Create Next.js Project
 
 ```bash
-# Create Next.js project with TypeScript
-npx create-next-app@latest my-voice-app --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
+# Create Next.js project with TypeScript (non-interactive)
+npx create-next-app@latest my-voice-app --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --yes
 cd my-voice-app
 ```
 
@@ -48,11 +48,10 @@ echo OPENAI_API_KEY=your_key > .env
 ### D. Create Voice App
 
 ```typescript
-// app/page.tsx
+// src/app/page.tsx
 "use client";
 import { useState, useCallback } from "react";
-import { createTransport, RealtimeEventRouter } from "@thrivereflections/realtime-core";
-import { AgentConfig } from "@thrivereflections/realtime-contracts";
+import { createTransport, RealtimeEventRouter, RealtimeEvent } from "@thrivereflections/realtime-core";
 
 export default function VoiceApp() {
   const [isConnected, setIsConnected] = useState(false);
@@ -93,7 +92,7 @@ export default function VoiceApp() {
       // Connect to voice session
       await transport.connect({
         token: "dummy-token", // Transport will fetch its own token
-        onEvent: (event) => eventRouter.routeEvent(event),
+        onEvent: (event: RealtimeEvent) => eventRouter.routeEvent(event),
       });
     } catch (error) {
       console.error("Connection failed:", error);
@@ -119,7 +118,7 @@ export default function VoiceApp() {
 ### E. Create Model Config API
 
 ```typescript
-// app/api/config/model/route.ts
+// src/app/api/config/model/route.ts
 import { NextResponse } from "next/server";
 import { validateModel, AVAILABLE_MODELS } from "@thrivereflections/realtime-config";
 
@@ -146,7 +145,7 @@ export async function GET() {
 ### F. Create Session API
 
 ```typescript
-// app/api/realtime/session/route.ts
+// src/app/api/realtime/session/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { loadRuntimeConfig } from "@thrivereflections/realtime-config";
 import { createLoggerFromEnv } from "@thrivereflections/realtime-observability";
