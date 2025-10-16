@@ -4,10 +4,9 @@ The Thrive Realtime Voice Platform is built as a TypeScript monorepo with a modu
 
 ## Core Concepts
 
-- [Architecture Overview](./overview.md) - High-level system design
-- [Package Structure](./packages.md) - How packages are organized
-- [Data Flow](./data-flow.md) - How data moves through the system
-- [Multi-App Pattern](./multi-app-pattern.md) - Building multiple applications
+- [Design Principles](./design-principles.md) - Core architectural patterns and rules
+- [Package Architecture](./packages.md) - Detailed package documentation and relationships
+- [Multi-App Pattern](./multi-app-pattern.md) - Building multiple independent applications
 
 ## Key Design Decisions
 

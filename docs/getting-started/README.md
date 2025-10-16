@@ -11,9 +11,10 @@ Welcome to the Thrive Realtime Voice Platform! This guide will help you get up a
 
 ## Quick Start
 
-1. [Installation](./installation.md) - Set up your development environment
-2. [Quick Start Guide](./quick-start.md) - Build your first voice app
-3. [Creating Your First App](./first-app.md) - Extend the platform
+1. [TL;DR Quick Start](./tldr.md) - Get running in 5 minutes
+2. [Installation](./installation.md) - Set up your development environment
+3. [Quick Start Guide](./quick-start.md) - Build your first voice app
+4. [Creating Your First App](./first-app.md) - Extend the platform
 
 ## Next Steps
 
