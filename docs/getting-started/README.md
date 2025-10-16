@@ -20,3 +20,4 @@ Welcome to the Thrive Realtime Voice Platform! This guide will help you get up a
 - Learn about the [Architecture](../architecture/)
 - Explore the [API Reference](../api/)
 - Read the [Deployment Guide](../deployment/)
+- Try the [Demo App](../../apps/demo-voice/README.md) - Complete reference implementation

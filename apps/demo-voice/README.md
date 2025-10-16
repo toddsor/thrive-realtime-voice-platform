@@ -1,6 +1,12 @@
-# Thrive Realtime Voice Demo App
+# Demo Voice App
 
-This is a complete reference implementation of the Thrive Realtime Voice Platform, showcasing all the platform packages working together in a production-ready Next.js application.
+A complete reference implementation of the Thrive Realtime Voice Platform, showcasing all platform packages working together in a production-ready Next.js application.
+
+> **📚 Platform Documentation**: See the [main platform docs](../../docs/) for complete documentation, architecture overview, and getting started guides.
+
+## Overview
+
+This demo app demonstrates the [Multi-App Schema Extension Pattern](../../docs/architecture/multi-app-pattern.md) by extending the platform's base schema with demo-specific tables and operations.
 
 ## Features
 
@@ -34,11 +40,46 @@ This is a complete reference implementation of the Thrive Realtime Voice Platfor
 - **Rate Limiting**: API protection and abuse prevention
 - **SRE Tools**: Circuit breakers, alerts, and synthetic monitoring
 
+## Database Schema
+
+This demo app demonstrates the [Multi-App Schema Extension Pattern](../../docs/architecture/multi-app-pattern.md) by combining:
+
+1. **Base Platform Schema** - Core tables from `packages/store-prisma`
+2. **Demo-Specific Extensions** - `DemoSession` and `DemoFeedback` tables
+3. **Relations** - Links between demo and platform tables
+
+### Demo-Specific Tables
+
+#### `DemoSession`
+- `id` - UUID primary key
+- `userId` - User identifier (references `AppUser`)
+- `sessionName` - Human-readable session name
+- `demoType` - Enum: 'VOICE', 'CHAT', 'VIDEO'
+- `metadata` - JSON field for additional data
+- `status` - Enum: 'ACTIVE', 'COMPLETED', 'CANCELLED'
+- `createdAt` - Timestamp
+- `updatedAt` - Timestamp
+
+#### `DemoFeedback`
+- `id` - UUID primary key
+- `sessionId` - Reference to DemoSession
+- `userId` - User identifier
+- `rating` - Integer 1-5
+- `feedback` - Optional text feedback
+- `category` - String category (e.g., 'voice_quality', 'response_time')
+- `createdAt` - Timestamp
+
+### Schema Implementation
+
+See [`lib/README.md`](./lib/README.md) for detailed implementation of the multi-app pattern.
+
 ## Quick Start
+
+> **🚀 For complete setup instructions, see the [Platform Getting Started Guide](../../docs/getting-started/).**
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - npm or pnpm
 - OpenAI API key (required)
 - Supabase account (optional, for authentication)

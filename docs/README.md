@@ -42,4 +42,7 @@ The Thrive Realtime Voice Platform provides a comprehensive set of packages and 
 
 ## Applications
 
-- **demo-voice** - Reference implementation and demo app
+- **[demo-voice](../apps/demo-voice/README.md)** - Reference implementation and demo app
+  - Demonstrates the [Multi-App Schema Extension Pattern](./architecture/multi-app-pattern.md)
+  - Complete Next.js app with authentication, database, and realtime features
+  - See [Demo App README](../apps/demo-voice/README.md) for detailed setup and usage
