@@ -3,7 +3,7 @@
 ## 1. Run the Demo (5 minutes)
 
 ```bash
-git clone <repo>
+git clone https://github.com/toddsor/thrive-realtime-voice-platform.git
 cd thrive-realtime-voice-platform
 npm install
 npm run build
