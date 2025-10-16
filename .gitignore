@@ -103,6 +103,9 @@ public
 tmp/
 temp/
 
+# Test app (exclude from version control)
+apps/test-app/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
