@@ -1,0 +1,152 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
+// POST /api/demo/sessions - Create a new demo session
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    
+    // Validate required fields
+    if (!body.userId || !body.sessionName || !body.demoType) {
+      return NextResponse.json(
+        { error: "Missing required fields: userId, sessionName, demoType" },
+        { status: 400 }
+      );
+    }
+
+    // Validate demoType
+    if (!['VOICE', 'CHAT', 'VIDEO'].includes(body.demoType)) {
+      return NextResponse.json(
+        { error: "Invalid demoType. Must be 'VOICE', 'CHAT', or 'VIDEO'" },
+        { status: 400 }
+      );
+    }
+
+    if (!prisma) {
+      return NextResponse.json(
+        { error: "Database not available" },
+        { status: 503 }
+      );
+    }
+
+    const session = await prisma.demoSession.create({
+      data: {
+        id: crypto.randomUUID(),
+        userId: body.userId,
+        sessionName: body.sessionName,
+        demoType: body.demoType,
+        metadata: body.metadata,
+        status: body.status || 'ACTIVE',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      include: {
+        user: true,
+        feedback: true
+      }
+    });
+
+    return NextResponse.json({ 
+      session,
+      message: "Demo session created successfully" 
+    });
+  } catch (error) {
+    console.error("Failed to create demo session:", error);
+    return NextResponse.json(
+      { error: "Failed to create demo session" },
+      { status: 500 }
+    );
+  }
+}
+
+// GET /api/demo/sessions - Get demo sessions for a user
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "userId is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!prisma) {
+      return NextResponse.json(
+        { error: "Database not available" },
+        { status: 503 }
+      );
+    }
+
+    const sessions = await prisma.demoSession.findMany({
+      where: { userId },
+      include: {
+        user: true,
+        feedback: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    return NextResponse.json({ 
+      sessions,
+      count: sessions.length 
+    });
+  } catch (error) {
+    console.error("Failed to get demo sessions:", error);
+    return NextResponse.json(
+      { error: "Failed to get demo sessions" },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT /api/demo/sessions/[id] - Update a demo session
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get("id");
+    
+    if (!sessionId) {
+      return NextResponse.json(
+        { error: "Session ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json();
+    
+    if (!prisma) {
+      return NextResponse.json(
+        { error: "Database not available" },
+        { status: 503 }
+      );
+    }
+
+    const session = await prisma.demoSession.update({
+      where: { id: sessionId },
+      data: {
+        ...body,
+        updatedAt: new Date()
+      },
+      include: {
+        user: true,
+        feedback: true
+      }
+    });
+
+    return NextResponse.json({ 
+      session,
+      message: "Demo session updated successfully" 
+    });
+  } catch (error) {
+    console.error("Failed to update demo session:", error);
+    return NextResponse.json(
+      { error: "Failed to update demo session" },
+      { status: 500 }
+    );
+  }
+}
