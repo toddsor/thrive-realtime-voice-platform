@@ -27,10 +27,12 @@ cd apps/my-app
 npm init -y
 ```
 
-### B. Install Platform Packages
+### B. Install Platform Packages (from workspace)
 ```bash
-npm install @thrive/realtime-contracts @thrive/realtime-core
-npm install @thrive/realtime-transport-websocket
+# Install from local workspace packages
+npm install file:../../packages/contracts
+npm install file:../../packages/core
+npm install file:../../packages/transport-websocket
 npm install next react react-dom
 ```
 
