@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { healthCheckManager, HealthCheckManager } from "@thrive/realtime-sre";
-import { ConsoleLogger } from "@thrive/realtime-observability";
-import { toolRegistry } from "@thrive/realtime-tool-gateway";
+import { healthCheckManager, HealthCheckManager } from "@thrivereflections/realtime-sre";
+import { ConsoleLogger } from "@thrivereflections/realtime-observability";
+import { toolRegistry } from "@thrivereflections/realtime-tool-gateway";
 
 export const runtime = "nodejs";
 
@@ -118,7 +118,7 @@ const vectorStoreHealthChecker = HealthCheckManager.createChecker(
     try {
       // Check if vector store is accessible
       // This is a simple check - in production you'd want more sophisticated validation
-      const vectorStore = await import("@thrive/realtime-tool-gateway").catch(() => null);
+      const vectorStore = await import("@thrivereflections/realtime-tool-gateway").catch(() => null);
 
       if (!vectorStore) {
         return {

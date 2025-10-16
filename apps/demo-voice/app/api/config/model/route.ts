@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { validateModel, AVAILABLE_MODELS } from "@thrive/realtime-config";
+import { validateModel, AVAILABLE_MODELS } from "@thrivereflections/realtime-config";
 
 export async function GET() {
   const result = validateModel();

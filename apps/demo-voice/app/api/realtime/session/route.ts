@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { loadRuntimeConfig, loadAuthConfig } from "@thrive/realtime-config";
-import { createLoggerFromEnv } from "@thrive/realtime-observability";
+import { loadRuntimeConfig, loadAuthConfig } from "@thrivereflections/realtime-config";
+import { createLoggerFromEnv } from "@thrivereflections/realtime-observability";
 import { getSystemPrompt } from "@/lib/config/systemPrompts";
 
 export const runtime = "edge";

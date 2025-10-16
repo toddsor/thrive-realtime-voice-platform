@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConsoleLogger } from "@thrive/realtime-observability";
-import { syntheticMonitoring } from "@thrive/realtime-sre";
+import { ConsoleLogger } from "@thrivereflections/realtime-observability";
+import { syntheticMonitoring } from "@thrivereflections/realtime-sre";
 
 export const runtime = "nodejs";
 

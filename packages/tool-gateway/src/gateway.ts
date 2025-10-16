@@ -1,4 +1,4 @@
-import { PolicyConfig } from "@thrive/realtime-contracts";
+import { PolicyConfig } from "@thrivereflections/realtime-contracts";
 
 export type Tool = (input: unknown, context?: ToolContext) => Promise<unknown>;
 

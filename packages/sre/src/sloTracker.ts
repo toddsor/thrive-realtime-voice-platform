@@ -1,4 +1,4 @@
-import { ConsoleLogger } from "@thrive/realtime-observability";
+import { ConsoleLogger } from "@thrivereflections/realtime-observability";
 
 export interface SLODefinition {
   name: string;

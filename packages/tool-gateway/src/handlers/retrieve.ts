@@ -1,4 +1,4 @@
-import { ToolCallResponse } from "@thrive/realtime-contracts";
+import { ToolCallResponse } from "@thrivereflections/realtime-contracts";
 import { VectorStore } from "../stores/documentStore";
 
 export interface RetrieveToolArgs {

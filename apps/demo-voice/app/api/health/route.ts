@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { healthCheckManager, HealthCheckManager } from "@thrive/realtime-sre";
-import { ConsoleLogger } from "@thrive/realtime-observability";
+import { healthCheckManager, HealthCheckManager } from "@thrivereflections/realtime-sre";
+import { ConsoleLogger } from "@thrivereflections/realtime-observability";
 
 export const runtime = "edge";
 

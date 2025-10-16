@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConsoleLogger } from "@thrive/realtime-observability";
-import { usageTracker } from "@thrive/realtime-usage";
-import { quotaManager } from "@thrive/realtime-usage";
-import { sessionLimitManager } from "@thrive/realtime-config";
+import { ConsoleLogger } from "@thrivereflections/realtime-observability";
+import { usageTracker } from "@thrivereflections/realtime-usage";
+import { quotaManager } from "@thrivereflections/realtime-usage";
+import { sessionLimitManager } from "@thrivereflections/realtime-config";
 
 export const runtime = "nodejs";
 

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { AgentConfig } from "@thrive/realtime-contracts";
-import { ConsoleLogger } from "@thrive/realtime-observability";
+import { AgentConfig } from "@thrivereflections/realtime-contracts";
+import { ConsoleLogger } from "@thrivereflections/realtime-observability";
 import { memoryStore } from "@/lib/stores/memory";
 import {
   createTransport,
@@ -8,8 +8,8 @@ import {
   Transcript as EventTranscript,
   UsageInfo,
   RealtimeEvent,
-} from "@thrive/realtime-core";
-import { Transport, TransportKind } from "@thrive/realtime-contracts";
+} from "@thrivereflections/realtime-core";
+import { Transport, TransportKind } from "@thrivereflections/realtime-contracts";
 
 export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
 

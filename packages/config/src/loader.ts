@@ -5,7 +5,7 @@ import {
   DatabaseConfig,
   AuthConfig,
   TransportKind,
-} from "@thrive/realtime-contracts";
+} from "@thrivereflections/realtime-contracts";
 
 function requireEnv(name: string): string {
   const v = process.env[name];

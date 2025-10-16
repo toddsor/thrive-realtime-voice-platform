@@ -1,6 +1,6 @@
-import { AgentConfig, Timings } from "@thrive/realtime-contracts";
+import { AgentConfig, Timings } from "@thrivereflections/realtime-contracts";
 import { Transcript } from "@/lib/hooks/useRealtimeVoice";
-import { redactPII } from "@thrive/realtime-security";
+import { redactPII } from "@thrivereflections/realtime-security";
 
 export interface ToolEvent {
   id: string;

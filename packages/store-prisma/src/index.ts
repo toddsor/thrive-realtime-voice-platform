@@ -6,8 +6,8 @@ import {
   Timings,
   TranscriptSegment,
   ToolEvent,
-} from "@thrive/realtime-contracts";
-import { AgentConfig } from "@thrive/realtime-contracts";
+} from "@thrivereflections/realtime-contracts";
+import { AgentConfig } from "@thrivereflections/realtime-contracts";
 
 export interface PrismaStoreConfig {
   databaseUrl: string;

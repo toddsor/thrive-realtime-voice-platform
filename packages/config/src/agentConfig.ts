@@ -1,4 +1,4 @@
-import { AgentConfig } from "@thrive/realtime-contracts";
+import { AgentConfig } from "@thrivereflections/realtime-contracts";
 
 export const defaultAgentConfig: AgentConfig = {
   persona: "You are a helpful AI assistant.",

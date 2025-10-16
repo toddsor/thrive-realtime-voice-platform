@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@thrive/realtime-lib";
+import { cn } from "@thrivereflections/realtime-lib";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (

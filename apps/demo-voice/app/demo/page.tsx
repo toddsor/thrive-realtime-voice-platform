@@ -16,8 +16,8 @@ import { PrivacyWarningDialog } from "@/components/ui/privacy-warning-dialog";
 import { CostDisplay } from "@/components/ui/cost-display";
 import { LiveCostTracker } from "@/components/ui/live-cost-tracker";
 import { createClient } from "@/lib/supabase/client";
-import { SupabaseAuthProvider } from "@thrive/realtime-auth-supabase";
-import { InjectableConsoleLogger } from "@thrive/realtime-observability";
+import { SupabaseAuthProvider } from "@thrivereflections/realtime-auth-supabase";
+import { InjectableConsoleLogger } from "@thrivereflections/realtime-observability";
 
 export default function VoicePage() {
   const [isConnecting, setIsConnecting] = useState(false);

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ToolCall, ToolCallResponse } from "@thrive/realtime-contracts";
-import { createLoggerFromEnv } from "@thrive/realtime-observability";
-import { loadRuntimeConfig, loadDatabaseConfig, loadAuthConfig } from "@thrive/realtime-config";
-import { ToolGateway, echoTool, retrieveTool } from "@thrive/realtime-tool-gateway";
-import { createPrismaStore } from "@thrive/realtime-store-prisma";
+import { ToolCall, ToolCallResponse } from "@thrivereflections/realtime-contracts";
+import { createLoggerFromEnv } from "@thrivereflections/realtime-observability";
+import { loadRuntimeConfig, loadDatabaseConfig, loadAuthConfig } from "@thrivereflections/realtime-config";
+import { ToolGateway, echoTool, retrieveTool } from "@thrivereflections/realtime-tool-gateway";
+import { createPrismaStore } from "@thrivereflections/realtime-store-prisma";
 import { createClient } from "@/lib/supabase/server";
-import { createUserSyncService } from "@thrive/realtime-auth-supabase";
+import { createUserSyncService } from "@thrivereflections/realtime-auth-supabase";
 
 export const runtime = "nodejs";
 

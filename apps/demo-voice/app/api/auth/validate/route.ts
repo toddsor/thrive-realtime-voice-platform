@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getUserByAuthId } from "@/lib/auth/userSync";
-import { ConsoleLogger } from "@thrive/realtime-observability";
+import { ConsoleLogger } from "@thrivereflections/realtime-observability";
 
 export const runtime = "nodejs";
 

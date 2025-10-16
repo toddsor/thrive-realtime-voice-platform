@@ -1,4 +1,4 @@
-import { InjectableLogger } from "@thrive/realtime-observability";
+import { InjectableLogger } from "@thrivereflections/realtime-observability";
 
 export interface User {
   sub: string;

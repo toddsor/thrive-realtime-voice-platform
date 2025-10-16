@@ -1,4 +1,4 @@
-import { ConsoleLogger } from "@thrive/realtime-observability";
+import { ConsoleLogger } from "@thrivereflections/realtime-observability";
 import { sloTracker } from "./sloTracker";
 import { metricsCollector } from "./metrics";
 

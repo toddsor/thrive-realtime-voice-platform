@@ -1,6 +1,6 @@
 import { PrismaClient } from "../node_modules/.prisma/client";
-import { createPrismaStore, PrismaStoreConfig, PrismaStoreDeps } from "@thrive/realtime-store-prisma";
-import { PersistenceStore } from "@thrive/realtime-contracts";
+import { createPrismaStore, PrismaStoreConfig, PrismaStoreDeps } from "@thrivereflections/realtime-store-prisma";
+import { PersistenceStore } from "@thrivereflections/realtime-contracts";
 
 // Demo-specific interfaces
 export interface DemoSession {

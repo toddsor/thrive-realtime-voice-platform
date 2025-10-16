@@ -1,4 +1,4 @@
-import { InjectableLogger } from "@thrive/realtime-observability";
+import { InjectableLogger } from "@thrivereflections/realtime-observability";
 import { User } from "./authProvider";
 
 export interface UserSyncConfig {

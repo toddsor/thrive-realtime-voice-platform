@@ -1,4 +1,4 @@
-import { Transport } from "@thrive/realtime-contracts";
+import { Transport } from "@thrivereflections/realtime-contracts";
 
 export interface WebRTCTransportConfig {
   voice?: string;

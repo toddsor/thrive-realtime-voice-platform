@@ -1,4 +1,4 @@
-import { ToolCall, ToolCallResponse } from "@thrive/realtime-contracts";
+import { ToolCall, ToolCallResponse } from "@thrivereflections/realtime-contracts";
 
 export interface ToolHandler {
   (args: Record<string, unknown>, user?: { sub?: string; tenant?: string }): Promise<unknown>;

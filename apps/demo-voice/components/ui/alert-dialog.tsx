@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 
-import { cn } from "@thrive/realtime-lib";
+import { cn } from "@thrivereflections/realtime-lib";
 import { buttonVariants } from "@/components/ui/button";
 
 function AlertDialog({ ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {

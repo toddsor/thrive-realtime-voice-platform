@@ -1,6 +1,6 @@
-import { SessionUsage, UsageAggregation } from '@thrive/realtime-usage';
-import { PerformanceMetrics, MetricsAggregation } from '@thrive/realtime-usage';
-import { CostBreakdown } from '@thrive/realtime-usage';
+import { SessionUsage, UsageAggregation } from '@thrivereflections/realtime-usage';
+import { PerformanceMetrics, MetricsAggregation } from '@thrivereflections/realtime-usage';
+import { CostBreakdown } from '@thrivereflections/realtime-usage';
 
 export interface UsageStore {
   // Session usage operations

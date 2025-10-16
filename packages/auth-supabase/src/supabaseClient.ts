@@ -1,7 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { InjectableLogger } from "@thrive/realtime-observability";
+import { InjectableLogger } from "@thrivereflections/realtime-observability";
 
 export interface SupabaseClientConfig {
   supabaseUrl: string;

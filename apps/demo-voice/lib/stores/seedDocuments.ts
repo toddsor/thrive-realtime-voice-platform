@@ -1,4 +1,4 @@
-import { Document } from '@thrive/realtime-tool-gateway';
+import { Document } from '@thrivereflections/realtime-tool-gateway';
 
 export const sampleDocuments: Document[] = [
   {

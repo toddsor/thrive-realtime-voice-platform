@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConsoleLogger } from "@thrive/realtime-observability";
-import { alertManager } from "@thrive/realtime-sre";
-import { registerAllAlertRules } from "@thrive/realtime-sre";
+import { ConsoleLogger } from "@thrivereflections/realtime-observability";
+import { alertManager } from "@thrivereflections/realtime-sre";
+import { registerAllAlertRules } from "@thrivereflections/realtime-sre";
 
 export const runtime = "nodejs";
 

@@ -1,5 +1,5 @@
 import { createDemoStore, DemoStoreConfig, DemoStoreDeps } from "./demoStore";
-import { redact } from "@thrive/realtime-security";
+import { redact } from "@thrivereflections/realtime-security";
 
 // Store configuration
 const config: DemoStoreConfig = {

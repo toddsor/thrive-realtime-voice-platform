@@ -160,19 +160,19 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ### Platform Packages Used
 
-- `@thrive/realtime-contracts` - Core TypeScript interfaces
-- `@thrive/realtime-core` - Voice communication engine
-- `@thrive/realtime-config` - Configuration management
-- `@thrive/realtime-observability` - Logging and monitoring
-- `@thrive/realtime-store-prisma` - Database persistence
-- `@thrive/realtime-tool-gateway` - Function calling and RAG
-- `@thrive/realtime-auth-supabase` - Authentication
-- `@thrive/realtime-transport-webrtc` - WebRTC transport
-- `@thrive/realtime-transport-websocket` - WebSocket transport
-- `@thrive/realtime-usage` - Cost tracking and analytics
-- `@thrive/realtime-security` - Security and content safety
-- `@thrive/realtime-sre` - SRE tools and monitoring
-- `@thrive/realtime-ui-components` - UI components
+- `@thrivereflections/realtime-contracts` - Core TypeScript interfaces
+- `@thrivereflections/realtime-core` - Voice communication engine
+- `@thrivereflections/realtime-config` - Configuration management
+- `@thrivereflections/realtime-observability` - Logging and monitoring
+- `@thrivereflections/realtime-store-prisma` - Database persistence
+- `@thrivereflections/realtime-tool-gateway` - Function calling and RAG
+- `@thrivereflections/realtime-auth-supabase` - Authentication
+- `@thrivereflections/realtime-transport-webrtc` - WebRTC transport
+- `@thrivereflections/realtime-transport-websocket` - WebSocket transport
+- `@thrivereflections/realtime-usage` - Cost tracking and analytics
+- `@thrivereflections/realtime-security` - Security and content safety
+- `@thrivereflections/realtime-sre` - SRE tools and monitoring
+- `@thrivereflections/realtime-ui-components` - UI components
 
 ### Application Structure
 
@@ -291,7 +291,7 @@ npm run lint
 ### Custom UI Components
 
 1. Add components to `components/ui/`
-2. Import from `@thrive/realtime-ui-components`
+2. Import from `@thrivereflections/realtime-ui-components`
 3. Use in your application
 
 ### Custom Authentication

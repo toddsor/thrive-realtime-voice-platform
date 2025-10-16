@@ -1,7 +1,7 @@
-import { AgentConfig } from "@thrive/realtime-contracts";
+import { AgentConfig } from "@thrivereflections/realtime-contracts";
 import { authProvider } from "@/lib/auth/authProvider";
 import { getPersonaOnly } from "@/lib/config/systemPrompts";
-import { featureFlagManager } from "@thrive/realtime-config";
+import { featureFlagManager } from "@thrivereflections/realtime-config";
 
 export const defaultAgentConfig: AgentConfig = {
   persona: getPersonaOnly(),
