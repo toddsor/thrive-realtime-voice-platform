@@ -2,13 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  experimental: {
-    turbo: {
-      rules: {
-        "*.svg": {
-          loaders: ["@svgr/webpack"],
-          as: "*.js",
-        },
+  // Updated turbo config (replaces deprecated experimental.turbo)
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
       },
     },
   },
@@ -22,6 +21,8 @@ const nextConfig: NextConfig = {
   generateBuildId: async () => {
     return "build-" + Date.now();
   },
+  // Fix workspace root detection for monorepo
+  outputFileTracingRoot: process.cwd(),
 };
 
 export default nextConfig;
