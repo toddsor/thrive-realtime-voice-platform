@@ -1,4 +1,4 @@
-import { RuntimeConfig, TransportFactory } from "@thrive/realtime-contracts";
+import { RuntimeConfig, TransportFactory } from "@thrivereflections/realtime-contracts";
 import { createTransport } from "./transports/factory";
 
 export interface RealtimeDeps {

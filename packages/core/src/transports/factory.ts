@@ -1,4 +1,4 @@
-import { Transport, TransportKind } from "@thrive/realtime-contracts";
+import { Transport, TransportKind } from "@thrivereflections/realtime-contracts";
 import { getSessionToken } from "./sessionProvider";
 
 export interface TransportFactory {
@@ -10,18 +10,18 @@ export function createTransport(kind: TransportKind): Transport {
     case "webrtc":
       try {
         // Dynamic import to avoid circular dependencies
-        const { createWebRTCTransport } = require("@thrive/realtime-transport-webrtc");
+        const { createWebRTCTransport } = require("@thrivereflections/realtime-transport-webrtc");
         return createWebRTCTransport({}, { getSessionToken });
       } catch (error) {
-        throw new Error("WebRTC transport not available - install @thrive/realtime-transport-webrtc");
+        throw new Error("WebRTC transport not available - install @thrivereflections/realtime-transport-webrtc");
       }
     case "websocket":
       try {
         // Dynamic import to avoid circular dependencies
-        const { createWebSocketTransport } = require("@thrive/realtime-transport-websocket");
+        const { createWebSocketTransport } = require("@thrivereflections/realtime-transport-websocket");
         return createWebSocketTransport({}, { getSessionToken });
       } catch (error) {
-        throw new Error("WebSocket transport not available - install @thrive/realtime-transport-websocket");
+        throw new Error("WebSocket transport not available - install @thrivereflections/realtime-transport-websocket");
       }
     default:
       throw new Error(`Unknown transport kind: ${kind}`);
