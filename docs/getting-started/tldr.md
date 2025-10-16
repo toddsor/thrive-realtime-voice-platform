@@ -82,7 +82,7 @@ npm run build:packages
 ### C. Set Up Environment
 
 ```bash
-echo OPENAI_API_KEY=your_key > .env.local
+echo OPENAI_API_KEY=your_key > .env
 ```
 
 ### D. Create Voice App
