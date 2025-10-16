@@ -36,7 +36,7 @@ cd my-voice-app
 Install the Thrive platform packages from npm:
 
 ```bash
-npm install @thrivereflections/realtime-core @thrivereflections/realtime-config @thrivereflections/realtime-contracts @thrivereflections/realtime-observability
+npm install @thrivereflections/realtime-core @thrivereflections/realtime-config @thrivereflections/realtime-contracts @thrivereflections/realtime-observability @thrivereflections/realtime-transport-websocket
 ```
 
 ### C. Set Up Environment
@@ -56,11 +56,40 @@ import { createTransport, RealtimeEventRouter, RealtimeEvent } from "@thriverefl
 export default function VoiceApp() {
   const [isConnected, setIsConnected] = useState(false);
   const [transcripts, setTranscripts] = useState<Array<{ id: string; role: string; text: string }>>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  // Audio playback function
+  const playAudio = useCallback((audioData: Int16Array) => {
+    try {
+      // Convert Int16Array to AudioBuffer
+      const audioContext = new AudioContext({ sampleRate: 24000 });
+      const audioBuffer = audioContext.createBuffer(1, audioData.length, 24000);
+      const channelData = audioBuffer.getChannelData(0);
+
+      // Convert Int16 to Float32
+      for (let i = 0; i < audioData.length; i++) {
+        channelData[i] = audioData[i] / 32768.0;
+      }
+
+      // Play audio
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContext.destination);
+      source.start();
+    } catch (err) {
+      console.error("Audio playback failed:", err);
+    }
+  }, []);
 
   const connectToVoice = useCallback(async () => {
     try {
+      setError(null);
+
       // Get model configuration from platform API
       const modelResponse = await fetch("/api/config/model");
+      if (!modelResponse.ok) {
+        throw new Error(`Failed to get model config: ${modelResponse.status}`);
+      }
       const { model } = await modelResponse.json();
       console.log("Using model:", model);
 
@@ -85,7 +114,8 @@ export default function VoiceApp() {
         },
         onAudioResponse: (audioData) => {
           // Handle audio playback
-          console.log("Audio response received");
+          console.log("Audio response received, playing...");
+          playAudio(audioData);
         },
       });
 
@@ -96,6 +126,7 @@ export default function VoiceApp() {
       });
     } catch (error) {
       console.error("Connection failed:", error);
+      setError(error instanceof Error ? error.message : "Connection failed");
     }
   }, []);
 
@@ -103,6 +134,7 @@ export default function VoiceApp() {
     <div>
       <h1>My Voice App</h1>
       <button onClick={connectToVoice}>{isConnected ? "Connected" : "Start Voice Chat"}</button>
+      {error && <div style={{ color: "red", marginTop: "10px" }}>Error: {error}</div>}
       <div>
         {transcripts.map((t) => (
           <div key={t.id}>

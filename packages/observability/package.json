@@ -1,6 +1,6 @@
 {
   "name": "@thrivereflections/realtime-observability",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Observability and logging for the Thrive Realtime Voice Platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

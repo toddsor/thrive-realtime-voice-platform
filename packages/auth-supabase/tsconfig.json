@@ -18,8 +18,8 @@
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "@thrive/realtime-contracts": ["../contracts/dist"],
-      "@thrive/realtime-observability": ["../observability/dist"]
+      "@thrivereflections/realtime-contracts": ["../contracts/dist"],
+      "@thrivereflections/realtime-observability": ["../observability/dist"]
     }
   },
   "include": ["src/**/*"],

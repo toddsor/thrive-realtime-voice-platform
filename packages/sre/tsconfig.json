@@ -18,7 +18,7 @@
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "@thrive/realtime-contracts": ["../contracts/dist"]
+      "@thrivereflections/realtime-contracts": ["../contracts/dist"]
     }
   },
   "include": ["src/**/*"],
