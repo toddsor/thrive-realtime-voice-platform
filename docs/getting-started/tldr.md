@@ -9,12 +9,13 @@ git clone https://github.com/toddsor/thrive-realtime-voice-platform.git
 cd thrive-realtime-voice-platform
 npm install
 npm run build
+cd apps/demo-voice
 
 # Set env vars
-cd apps/demo-voice
 echo "OPENAI_API_KEY=your_key" > .env
 
 # Run (without database)
+npm install
 npm run dev
 # Visit http://localhost:3000/demo
 ```

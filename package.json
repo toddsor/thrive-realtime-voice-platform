@@ -5,7 +5,7 @@
   "packageManager": "npm@10.0.0",
   "workspaces": [
     "packages/*",
-    "apps/demo-voice-app"
+    "apps/demo-voice"
   ],
   "scripts": {
     "build": "turbo run build",
