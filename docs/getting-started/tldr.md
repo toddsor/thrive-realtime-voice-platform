@@ -53,13 +53,15 @@ echo OPENAI_API_KEY=your_key > .env
 ```typescript
 // src/app/page.tsx
 "use client";
-import { useState, useCallback } from "react";
-import { createTransport, RealtimeEventRouter, RealtimeEvent } from "@thrivereflections/realtime-core";
+import { useState, useCallback, useRef } from "react";
+import { initRealtime, RealtimeEventRouter, RealtimeEvent } from "@thrivereflections/realtime-core";
+import { createLoggerFromEnv } from "@thrivereflections/realtime-observability";
 
 export default function VoiceApp() {
   const [isConnected, setIsConnected] = useState(false);
   const [transcripts, setTranscripts] = useState<Array<{ id: string; role: string; text: string }>>([]);
   const [error, setError] = useState<string | null>(null);
+  const realtimeRef = useRef<any>(null);
 
   // Audio playback function
   const playAudio = useCallback((audioData: Int16Array) => {
@@ -96,8 +98,9 @@ export default function VoiceApp() {
       const runtimeConfig = await configResponse.json();
       console.log("Using model:", runtimeConfig.model);
 
-      // Create transport using Thrive platform
-      const transport = createTransport("websocket");
+      // Generate client session ID for tracking
+      const clientSessionId = crypto.randomUUID();
+      const correlationId = crypto.randomUUID();
 
       // Set up event router
       const eventRouter = new RealtimeEventRouter({
@@ -120,32 +123,66 @@ export default function VoiceApp() {
           console.log("Audio response received, playing...");
           playAudio(audioData);
         },
+        onError: (error) => {
+          console.error("Event error:", error);
+          setError(error instanceof Error ? error.message : "Connection error");
+        },
       });
 
-      // Connect to voice session
-      await transport.connect({
-        token: async () => {
-          // Get session token from your backend
-          const response = await fetch("/api/realtime/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-          });
-          if (!response.ok) throw new Error("Failed to get session token");
-          const data = await response.json();
-          return data.client_secret.value;
-        },
-        onEvent: (event: unknown) => eventRouter.routeEvent(event as RealtimeEvent),
+      // Create token getter function with proper headers
+      const getToken = async () => {
+        const response = await fetch("/api/realtime/session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-client-session-id": clientSessionId,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to get session token: ${response.status}`);
+        }
+
+        const sessionData = await response.json();
+        return sessionData.client_secret || sessionData.sessionId;
+      };
+
+      // Initialize realtime connection using platform's initRealtime
+      const realtime = initRealtime(runtimeConfig, {
+        getToken,
+        onEvent: (event) => eventRouter.routeEvent(event as RealtimeEvent),
+        logger: createLoggerFromEnv(correlationId),
       });
+
+      realtimeRef.current = realtime;
+
+      // Start the connection
+      await realtime.start();
     } catch (error) {
       console.error("Connection failed:", error);
       setError(error instanceof Error ? error.message : "Connection failed");
+    }
+  }, [playAudio]);
+
+  const disconnect = useCallback(async () => {
+    if (realtimeRef.current) {
+      await realtimeRef.current.stop();
+      realtimeRef.current = null;
+      setIsConnected(false);
     }
   }, []);
 
   return (
     <div>
       <h1>My Voice App</h1>
-      <button onClick={connectToVoice}>{isConnected ? "Connected" : "Start Voice Chat"}</button>
+      <button onClick={connectToVoice} disabled={isConnected}>
+        {isConnected ? "Connected" : "Start Voice Chat"}
+      </button>
+      {isConnected && (
+        <button onClick={disconnect} style={{ marginLeft: "10px" }}>
+          Disconnect
+        </button>
+      )}
       {error && <div style={{ color: "red", marginTop: "10px" }}>Error: {error}</div>}
       <div>
         {transcripts.map((t) => (
@@ -302,5 +339,14 @@ export async function POST(request: NextRequest) {
 ```
 
 **Done!** You have a basic standalone voice app using the Thrive platform.
+
+## Key Improvements in This Pattern
+
+✅ **Uses `initRealtime()`** - Platform's high-level API instead of direct transport  
+✅ **Proper session tracking** - Includes `x-client-session-id` header  
+✅ **Correct token handling** - Handles both `client_secret` and `sessionId` formats  
+✅ **Structured logging** - Uses platform's logging utilities  
+✅ **Error handling** - Comprehensive error management  
+✅ **Connection lifecycle** - Proper connect/disconnect management
 
 > **Note**: The platform handles model configuration, session management, and provides additional features like tool execution, database persistence, and monitoring. See the [complete installation guide](./installation.md) for full setup.
