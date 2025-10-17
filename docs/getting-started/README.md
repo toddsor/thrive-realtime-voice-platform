@@ -26,6 +26,7 @@ For production applications with specific requirements:
 
 ## Next Steps
 
+- Read the [Developer Guide](../guides/developer-guide.md) - Complete guide for building applications
 - Learn about the [Architecture](../architecture/)
 - Explore the [API Reference](../api/)
 - Read the [Deployment Guide](../deployment/)

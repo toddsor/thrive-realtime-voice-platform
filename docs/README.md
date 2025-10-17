@@ -19,6 +19,7 @@ The Thrive Realtime Voice Platform provides a comprehensive set of packages and 
 ## Quick Links
 
 - [Getting Started](./getting-started/) - [TL;DR Quick Start](./getting-started/tldr.md)
+- [Developer Guide](./guides/developer-guide.md) - Complete developer guide for building apps
 - [Advanced Setup](./getting-started/advanced-setup/) - Production configurations
 - [Architecture Overview](./architecture/) - [Design Principles](./architecture/design-principles.md)
 - [API Reference](./api/)
