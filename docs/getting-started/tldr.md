@@ -62,6 +62,7 @@ import { createLoggerFromEnv } from "@thrivereflections/realtime-observability";
 
 export default function VoiceApp() {
   const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [transcripts, setTranscripts] = useState<Array<{ id: string; role: string; text: string }>>([]);
   const [error, setError] = useState<string | null>(null);
   const realtimeRef = useRef<any>(null);
@@ -92,6 +93,7 @@ export default function VoiceApp() {
   const connectToVoice = useCallback(async () => {
     try {
       setError(null);
+      setIsConnecting(true);
 
       // Get runtime configuration from platform API
       const configResponse = await fetch("/api/config/runtime");
@@ -110,6 +112,7 @@ export default function VoiceApp() {
         onSessionCreated: (sessionId) => {
           console.log("Session created:", sessionId);
           setIsConnected(true);
+          setIsConnecting(false);
         },
         onTranscript: (transcript) => {
           setTranscripts((prev) => [
@@ -129,6 +132,7 @@ export default function VoiceApp() {
         onError: (error) => {
           console.error("Event error:", error);
           setError(error instanceof Error ? error.message : "Connection error");
+          setIsConnecting(false);
         },
       });
 
@@ -164,6 +168,7 @@ export default function VoiceApp() {
     } catch (error) {
       console.error("Connection failed:", error);
       setError(error instanceof Error ? error.message : "Connection failed");
+      setIsConnecting(false);
     }
   }, [playAudio]);
 
@@ -176,23 +181,142 @@ export default function VoiceApp() {
   }, []);
 
   return (
-    <div>
-      <h1>My Voice App</h1>
-      <button onClick={connectToVoice} disabled={isConnected}>
-        {isConnected ? "Connected" : "Start Voice Chat"}
-      </button>
-      {isConnected && (
-        <button onClick={disconnect} style={{ marginLeft: "10px" }}>
-          Disconnect
-        </button>
-      )}
-      {error && <div style={{ color: "red", marginTop: "10px" }}>Error: {error}</div>}
-      <div>
-        {transcripts.map((t) => (
-          <div key={t.id}>
-            <strong>{t.role}:</strong> {t.text}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            Voice Assistant
+          </h1>
+          <p className="text-xl text-slate-300 mb-8">Real-time voice conversation with AI</p>
+        </div>
+
+        {/* Main Content */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
+          {/* Connection Status */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/10 border border-white/20">
+              <div
+                className={`w-3 h-3 rounded-full ${
+                  isConnected
+                    ? "bg-green-400 animate-pulse"
+                    : isConnecting
+                    ? "bg-yellow-400 animate-pulse"
+                    : "bg-red-400"
+                }`}
+              ></div>
+              <span className="text-white font-medium">
+                {isConnecting ? "Connecting..." : isConnected ? "Connected" : "Disconnected"}
+              </span>
+            </div>
           </div>
-        ))}
+
+          {/* Action Buttons */}
+          <div className="text-center mb-8">
+            {!isConnected ? (
+              <button
+                onClick={connectToVoice}
+                disabled={isConnecting}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-500 disabled:to-gray-600 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:transform-none disabled:cursor-not-allowed"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                  />
+                </svg>
+                {isConnecting ? "Connecting..." : "Start Voice Chat"}
+              </button>
+            ) : (
+              <button
+                onClick={disconnect}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Disconnect
+              </button>
+            )}
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl">
+              <div className="flex items-center gap-2 text-red-200">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="font-medium">Error: {error}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Transcripts */}
+          <div className="bg-black/20 rounded-xl p-6 min-h-[300px] max-h-[400px] overflow-y-auto">
+            <h3 className="text-white font-semibold text-lg mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              Conversation
+            </h3>
+
+            {transcripts.length > 0 ? (
+              <div className="space-y-4">
+                {transcripts.map((t) => (
+                  <div key={t.id} className="flex items-start gap-3">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        t.role === "user" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
+                      }`}
+                    >
+                      {t.role === "user" ? "U" : "AI"}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-white font-medium mb-1">{t.role === "user" ? "You" : "Assistant"}</div>
+                      <div className="text-slate-200 leading-relaxed">{t.text}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-slate-400 py-12">
+                <svg
+                  className="w-12 h-12 mx-auto mb-4 opacity-50"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+                <p className="text-lg">No conversation yet</p>
+                <p className="text-sm">Click "Start Voice Chat" to begin</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-8 text-slate-400 text-sm">
+          <p>Powered by Thrive Realtime Voice Platform</p>
+        </div>
       </div>
     </div>
   );
