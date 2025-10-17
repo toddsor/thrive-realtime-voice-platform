@@ -46,7 +46,7 @@ export function loadRuntimeConfig(): RuntimeConfig {
   return {
     model: getEnv("OPENAI_API_REALTIME_MODEL", "gpt-realtime-mini"),
     openaiKey: requireEnv("OPENAI_API_KEY"),
-    baseUrl: process.env.OPENAI_BASE_URL,
+    baseUrl: process.env.OPENAI_BASE_URL || "https://api.openai.com",
     featureFlags,
     policies,
   };

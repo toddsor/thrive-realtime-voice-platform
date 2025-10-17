@@ -11,7 +11,7 @@ npm install
 npm run build
 cd apps/demo-voice
 
-# Set env vars
+# Set env vars (baseUrl defaults to https://api.openai.com)
 echo "OPENAI_API_KEY=your_key" > .env
 
 # Run (without database)
@@ -44,6 +44,8 @@ npm install @thrivereflections/realtime-core @thrivereflections/realtime-config 
 
 ```bash
 echo OPENAI_API_KEY=your_key > .env
+# Optional: Override default OpenAI base URL
+# echo OPENAI_BASE_URL=https://api.openai.com >> .env
 ```
 
 ### D. Create Voice App
@@ -183,48 +185,52 @@ export const runtime = "edge";
 
 export async function POST(request: NextRequest) {
   const clientSessionId = request.headers.get("x-client-session-id");
-  const correlationId = request.headers.get("x-correlation-id");
-  const clientIp = request.ip;
+  const correlationId = crypto.randomUUID();
+  const logger = createLoggerFromEnv(correlationId);
 
-  const logger = createLoggerFromEnv({
-    clientSessionId,
-    correlationId,
-    openaiSessionId: undefined,
-    toolCallId: undefined,
-  });
+  // Set session IDs in logger
+  logger.setSessionIds(clientSessionId || undefined);
 
   try {
-    // Apply rate limiting
-    if (clientIp) {
-      const { success, remaining, reset } = await checkRateLimit(
-        "session_creation",
-        clientIp,
-        RATE_LIMITS.SESSION_CREATION
-      );
+    // Rate limiting check
+    const rateLimitResult = checkRateLimit(request, RATE_LIMITS.SESSION_CREATION);
+    if (!rateLimitResult.allowed) {
+      logger.warn("Rate limit exceeded for session creation", {
+        clientSessionId,
+        correlationId,
+        remaining: rateLimitResult.remaining,
+        resetTime: rateLimitResult.resetTime,
+      });
 
-      if (!success) {
-        logger.warn("Rate limit exceeded for session creation", {
-          clientSessionId,
-          correlationId,
-          remaining,
-          resetTime: reset,
-        });
-        return new NextResponse("Too Many Requests", {
+      return NextResponse.json(
+        {
+          error: "Rate limit exceeded",
+          remaining: rateLimitResult.remaining,
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
           status: 429,
           headers: {
-            "X-RateLimit-Limit": String(RATE_LIMITS.SESSION_CREATION.max),
-            "X-RateLimit-Remaining": String(remaining),
-            "X-RateLimit-Reset": String(reset),
+            "X-RateLimit-Limit": RATE_LIMITS.SESSION_CREATION.maxRequests.toString(),
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
           },
-        });
-      }
+        }
+      );
     }
 
-    const config = loadRuntimeConfig();
-    const agentConfig = getAgentConfigWithUser({ sub: "anonymous", tenant: "default" }, {});
+    logger.info("Session creation requested", {
+      clientSessionId,
+      correlationId,
+      rateLimitRemaining: rateLimitResult.remaining,
+    });
 
-    // Create OpenAI session
-    const openaiResponse = await fetch(`${config.baseUrl}/v1/realtime`, {
+    // Load configurations
+    const config = loadRuntimeConfig();
+    const agentConfig = await getAgentConfigWithUser({ sub: "anonymous", tenant: "default" }, {});
+
+    // Create OpenAI session using configured baseUrl
+    const openaiResponse = await fetch(`${config.baseUrl}/v1/realtime/sessions`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${config.openaiKey}`,
@@ -235,13 +241,10 @@ export async function POST(request: NextRequest) {
         model: config.model,
         voice: agentConfig.voice,
         instructions: agentConfig.persona,
-        input_audio: {
-          sample_rate: 24000,
-          type: "pcm",
-        },
-        response_audio: {
-          sample_rate: 24000,
-          type: "pcm",
+        input_audio_format: "pcm16",
+        output_audio_format: "pcm16",
+        input_audio_transcription: {
+          model: "whisper-1",
         },
         turn_detection: {
           type: "server_vad",

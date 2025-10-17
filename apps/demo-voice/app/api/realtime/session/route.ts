@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     // Create token getter function
     const getToken = async () => {
-      const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
+      const response = await fetch(`${config.baseUrl}/v1/realtime/sessions`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${config.openaiKey}`,
