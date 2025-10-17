@@ -4,6 +4,7 @@ import { createTransport } from "./transports/factory";
 export interface RealtimeDeps {
   getToken: () => Promise<string>;
   transportFactory?: TransportFactory;
+  baseUrl?: string;
   onEvent?: (event: unknown) => void;
   logger?: {
     info: (message: string, meta?: Record<string, unknown>) => void;
@@ -14,7 +15,7 @@ export interface RealtimeDeps {
 export function initRealtime(config: RuntimeConfig, deps: RealtimeDeps) {
   const factory = deps.transportFactory ?? createTransport;
 
-  const transport = factory(config.featureFlags.transport);
+  const transport = factory(config.featureFlags.transport, deps.baseUrl);
 
   async function start() {
     deps.logger?.info("Starting realtime connection", { transport: transport.kind });

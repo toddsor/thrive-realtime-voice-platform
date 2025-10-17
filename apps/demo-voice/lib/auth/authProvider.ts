@@ -1,216 +1,139 @@
+import { createClient } from "@/lib/supabase/client";
+import { SupabaseAuthProvider as PlatformSupabaseAuthProvider } from "@thrivereflections/realtime-auth-supabase";
+import { InjectableConsoleLogger } from "@thrivereflections/realtime-observability";
+import { syncUserToAppUser, getUserByAuthId } from "./userSync";
+
 export interface User {
   sub: string;
-  tenant?: string;
+  tenant: string;
   email?: string;
   name?: string;
   provider?: string;
 }
 
-export interface AuthProvider {
-  getCurrentUser(): Promise<User>;
-  isAuthenticated(): Promise<boolean>;
-  signIn?(): Promise<User>;
-  signOut?(): Promise<void>;
-  signUp?(email: string, password: string): Promise<{ user: User | null; error: Error | null }>;
-  signInWithEmail?(email: string, password: string): Promise<{ user: User | null; error: Error | null }>;
-  signInWithOAuth?(provider: 'google' | 'linkedin' | 'facebook'): Promise<void>;
-}
+// Create logger for auth operations
+const logger = new InjectableConsoleLogger("auth-provider");
 
-export class SupabaseAuthProvider implements AuthProvider {
-  private supabase: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+// Create Supabase client
+const supabaseClient = createClient();
+
+// Create auth provider instance
+export const SupabaseAuthProvider = new PlatformSupabaseAuthProvider({
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  logger,
+});
+
+// Enhanced auth provider with user sync
+export class DemoAuthProvider {
+  private supabaseAuth: typeof SupabaseAuthProvider;
 
   constructor() {
-    // This will be set by the client-side code
-    this.supabase = null;
+    this.supabaseAuth = SupabaseAuthProvider;
   }
 
-  setSupabaseClient(supabase: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-    this.supabase = supabase;
+  async signInWithOAuth(provider: "google" | "github" | "discord") {
+    if (!supabaseClient) {
+      throw new Error("Supabase client not available");
+    }
+
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/demo`,
+      },
+    });
+
+    if (error) {
+      logger.error("OAuth sign-in failed", { error: error.message, provider });
+      throw error;
+    }
+
+    return data;
   }
 
-  async getCurrentUser(): Promise<User> {
-    if (!this.supabase) {
-      return {
-        sub: 'anonymous',
-        tenant: 'default'
-      };
+  async signOut() {
+    if (!supabaseClient) {
+      throw new Error("Supabase client not available");
     }
 
-    try {
-      const { data: { user }, error } = await this.supabase.auth.getUser();
-      
-      if (error || !user) {
-        return {
-          sub: 'anonymous',
-          tenant: 'default'
-        };
-      }
+    const { error } = await supabaseClient.auth.signOut();
 
-      return {
-        sub: user.id,
-        tenant: 'default',
-        email: user.email,
-        name: user.user_metadata?.full_name || user.user_metadata?.name,
-        provider: user.app_metadata?.provider
-      };
-    } catch (error) {
-      console.error('Error getting current user:', error);
-      return {
-        sub: 'anonymous',
-        tenant: 'default'
-      };
-    }
-  }
-
-  async isAuthenticated(): Promise<boolean> {
-    if (!this.supabase) {
-      return false;
-    }
-
-    try {
-      const { data: { session }, error } = await this.supabase.auth.getSession();
-      return !error && !!session;
-    } catch (error) {
-      console.error('Error checking authentication:', error);
-      return false;
-    }
-  }
-
-  async signInWithEmail(email: string, password: string): Promise<{ user: User | null; error: Error | null }> {
-    if (!this.supabase) {
-      return { user: null, error: new Error('Supabase client not initialized') };
-    }
-
-    try {
-      const { data, error } = await this.supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        return { user: null, error };
-      }
-
-      const user: User = {
-        sub: data.user.id,
-        tenant: 'default',
-        email: data.user.email,
-        name: data.user.user_metadata?.full_name || data.user.user_metadata?.name,
-        provider: data.user.app_metadata?.provider
-      };
-
-      return { user, error: null };
-    } catch (error) {
-      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
-    }
-  }
-
-  async signUp(email: string, password: string): Promise<{ user: User | null; error: Error | null }> {
-    if (!this.supabase) {
-      return { user: null, error: new Error('Supabase client not initialized') };
-    }
-
-    try {
-      const { data, error } = await this.supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) {
-        return { user: null, error };
-      }
-
-      if (!data.user) {
-        return { user: null, error: new Error('No user returned from signup') };
-      }
-
-      const user: User = {
-        sub: data.user.id,
-        tenant: 'default',
-        email: data.user.email,
-        name: data.user.user_metadata?.full_name || data.user.user_metadata?.name,
-        provider: data.user.app_metadata?.provider
-      };
-
-      return { user, error: null };
-    } catch (error) {
-      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
-    }
-  }
-
-  async signInWithOAuth(provider: 'google' | 'linkedin' | 'facebook'): Promise<void> {
-    if (!this.supabase) {
-      throw new Error('Supabase client not initialized');
-    }
-
-    try {
-      // Force account selection by adding prompt=select_account
-      const { error } = await this.supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`,
-          queryParams: {
-            prompt: 'select_account'
-          }
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-    } catch (error) {
-      console.error(`Error signing in with ${provider}:`, error);
+    if (error) {
+      logger.error("Sign out failed", { error: error.message });
       throw error;
     }
   }
 
-  async signOut(): Promise<void> {
-    if (!this.supabase) {
-      return;
-    }
-
+  async getCurrentUser(): Promise<User | null> {
     try {
-      const { error } = await this.supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error);
+      if (!supabaseClient) {
+        logger.error("Supabase client not available");
+        return null;
       }
+
+      const {
+        data: { user },
+        error,
+      } = await supabaseClient.auth.getUser();
+
+      if (error) {
+        logger.error("Failed to get current user", { error: error.message });
+        return null;
+      }
+
+      if (!user) {
+        return null;
+      }
+
+      // Sync user to app user
+      const syncedUser = await syncUserToAppUser(user);
+      return syncedUser;
     } catch (error) {
-      console.error('Error signing out:', error);
+      logger.error("Error getting current user", { error });
+      return null;
     }
-  }
-
-  // Legacy methods for compatibility
-  async signIn(): Promise<User> {
-    const user = await this.getCurrentUser();
-    return user;
-  }
-}
-
-export class AnonymousAuthProvider implements AuthProvider {
-  async getCurrentUser(): Promise<User> {
-    return {
-      sub: 'anonymous',
-      tenant: 'default'
-    };
   }
 
   async isAuthenticated(): Promise<boolean> {
-    return true; // Anonymous is always "authenticated"
+    try {
+      if (!supabaseClient) {
+        logger.warn("Supabase client not available");
+        return false;
+      }
+
+      const {
+        data: { user },
+        error,
+      } = await supabaseClient.auth.getUser();
+
+      if (error) {
+        logger.warn("Auth check failed", { error: error.message });
+        return false;
+      }
+
+      return !!user;
+    } catch (error) {
+      logger.error("Error checking authentication", { error });
+      return false;
+    }
+  }
+
+  // Get user by auth ID (for server-side use)
+  async getUserByAuthId(authId: string): Promise<User | null> {
+    try {
+      return await getUserByAuthId(authId);
+    } catch (error) {
+      logger.error("Error getting user by auth ID", { error, authId });
+      return null;
+    }
+  }
+
+  // Get the underlying Supabase auth provider for direct access
+  getSupabaseAuth() {
+    return this.supabaseAuth;
   }
 }
 
-// Factory function to create auth provider based on environment
-export function createAuthProvider(): AuthProvider {
-  const authProvider = process.env.AUTH_PROVIDER || 'supabase';
-  
-  switch (authProvider) {
-    case 'supabase':
-      return new SupabaseAuthProvider();
-    case 'anonymous':
-    default:
-      return new AnonymousAuthProvider();
-  }
-}
-
-// Singleton instance
-export const authProvider = createAuthProvider();
+// Export singleton instance
+export const authProvider = new DemoAuthProvider();

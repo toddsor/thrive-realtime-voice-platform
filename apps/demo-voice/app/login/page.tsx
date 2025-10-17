@@ -6,40 +6,44 @@ import { useState, useEffect, Suspense } from "react";
 export const dynamic = "force-dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { SupabaseAuthProvider } from "@/lib/auth/authProvider";
+import { authProvider } from "@/lib/auth/authProvider";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { EmailLoginForm } from "@/components/auth/email-login-form";
 
 function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [authProvider, setAuthProvider] = useState<SupabaseAuthProvider | null>(null);
+  const [auth, setAuth] = useState<typeof authProvider | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/demo";
 
   useEffect(() => {
-    const supabase = createClient();
-    const provider = new SupabaseAuthProvider();
-    provider.setSupabaseClient(supabase);
-    setAuthProvider(provider);
+    setAuth(authProvider);
   }, []);
 
   const handleEmailLogin = async (email: string, password: string) => {
-    if (!authProvider) return;
-
     setIsLoading(true);
     setError(null);
 
     try {
-      const { user, error } = await authProvider.signInWithEmail(email, password);
+      const supabase = createClient();
+      if (!supabase) {
+        setError("Authentication service not available");
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (error) {
         setError(error.message || "Failed to sign in");
         return;
       }
 
-      if (user) {
+      if (data.user) {
         router.push(redirectTo);
       }
     } catch (err) {
@@ -51,13 +55,28 @@ function LoginForm() {
   };
 
   const handleGoogleSignIn = async () => {
-    if (!authProvider) return;
-
     setIsLoading(true);
     setError(null);
 
     try {
-      await authProvider.signInWithOAuth("google");
+      const supabase = createClient();
+      if (!supabase) {
+        setError("Authentication service not available");
+        setIsLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/demo`,
+        },
+      });
+
+      if (error) {
+        setError("Failed to sign in with Google");
+        setIsLoading(false);
+      }
     } catch (err) {
       console.error("Google sign in error:", err);
       setError("Failed to sign in with Google");
@@ -66,13 +85,28 @@ function LoginForm() {
   };
 
   const handleLinkedInSignIn = async () => {
-    if (!authProvider) return;
-
     setIsLoading(true);
     setError(null);
 
     try {
-      await authProvider.signInWithOAuth("linkedin");
+      const supabase = createClient();
+      if (!supabase) {
+        setError("Authentication service not available");
+        setIsLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "linkedin",
+        options: {
+          redirectTo: `${window.location.origin}/demo`,
+        },
+      });
+
+      if (error) {
+        setError("Failed to sign in with LinkedIn");
+        setIsLoading(false);
+      }
     } catch (err) {
       console.error("LinkedIn sign in error:", err);
       setError("Failed to sign in with LinkedIn");
@@ -81,13 +115,28 @@ function LoginForm() {
   };
 
   const handleFacebookSignIn = async () => {
-    if (!authProvider) return;
-
     setIsLoading(true);
     setError(null);
 
     try {
-      await authProvider.signInWithOAuth("facebook");
+      const supabase = createClient();
+      if (!supabase) {
+        setError("Authentication service not available");
+        setIsLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "facebook",
+        options: {
+          redirectTo: `${window.location.origin}/demo`,
+        },
+      });
+
+      if (error) {
+        setError("Failed to sign in with Facebook");
+        setIsLoading(false);
+      }
     } catch (err) {
       console.error("Facebook sign in error:", err);
       setError("Failed to sign in with Facebook");
@@ -95,7 +144,7 @@ function LoginForm() {
     }
   };
 
-  if (!authProvider) {
+  if (!auth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">Loading...</div>

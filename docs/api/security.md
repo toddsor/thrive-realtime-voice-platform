@@ -121,6 +121,46 @@ console.log(result.remaining); // number
 console.log(result.resetTime); // Date
 ```
 
+### Rate Limiting in API Routes
+
+Implement rate limiting with proper responses:
+
+```typescript
+import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, RATE_LIMITS } from "@thrivereflections/realtime-security";
+
+export async function POST(request: NextRequest) {
+  // Check rate limit
+  const rateLimitResult = checkRateLimit(request, RATE_LIMITS.SESSION_CREATION);
+
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      {
+        error: "Rate limit exceeded",
+        remaining: rateLimitResult.remaining,
+        resetTime: rateLimitResult.resetTime,
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": RATE_LIMITS.SESSION_CREATION.maxRequests.toString(),
+          "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+          "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+        },
+      }
+    );
+  }
+
+  // Process request...
+}
+```
+
+**Predefined Rate Limits:**
+
+- `RATE_LIMITS.SESSION_CREATION` - 10 sessions per hour per IP
+- `RATE_LIMITS.TOOL_CALLS` - 30 tool calls per minute per IP
+- `RATE_LIMITS.API_REQUESTS` - 100 requests per 15 minutes per IP
+
 ## Configuration
 
 ### Content Safety Configuration

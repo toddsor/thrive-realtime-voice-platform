@@ -36,7 +36,7 @@ cd my-voice-app
 Install the Thrive platform packages from npm:
 
 ```bash
-npm install @thrivereflections/realtime-core @thrivereflections/realtime-config @thrivereflections/realtime-contracts @thrivereflections/realtime-observability @thrivereflections/realtime-transport-websocket
+npm install @thrivereflections/realtime-core @thrivereflections/realtime-config @thrivereflections/realtime-contracts @thrivereflections/realtime-observability @thrivereflections/realtime-transport-websocket @thrivereflections/realtime-security @thrivereflections/realtime-usage
 ```
 
 ### C. Set Up Environment
@@ -85,13 +85,13 @@ export default function VoiceApp() {
     try {
       setError(null);
 
-      // Get model configuration from platform API
-      const modelResponse = await fetch("/api/config/model");
-      if (!modelResponse.ok) {
-        throw new Error(`Failed to get model config: ${modelResponse.status}`);
+      // Get runtime configuration from platform API
+      const configResponse = await fetch("/api/config/runtime");
+      if (!configResponse.ok) {
+        throw new Error(`Failed to get runtime config: ${configResponse.status}`);
       }
-      const { model } = await modelResponse.json();
-      console.log("Using model:", model);
+      const runtimeConfig = await configResponse.json();
+      console.log("Using model:", runtimeConfig.model);
 
       // Create transport using Thrive platform
       const transport = createTransport("websocket");
@@ -121,7 +121,16 @@ export default function VoiceApp() {
 
       // Connect to voice session
       await transport.connect({
-        token: "dummy-token", // Transport will fetch its own token
+        token: async () => {
+          // Get session token from your backend
+          const response = await fetch("/api/realtime/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+          });
+          if (!response.ok) throw new Error("Failed to get session token");
+          const data = await response.json();
+          return data.client_secret.value;
+        },
         onEvent: (event: unknown) => eventRouter.routeEvent(event as RealtimeEvent),
       });
     } catch (error) {
@@ -147,30 +156,16 @@ export default function VoiceApp() {
 }
 ```
 
-### E. Create Model Config API
+### E. Create Runtime Config API
 
 ```typescript
-// src/app/api/config/model/route.ts
+// src/app/api/config/runtime/route.ts
 import { NextResponse } from "next/server";
-import { validateModel, AVAILABLE_MODELS } from "@thrivereflections/realtime-config";
+import { loadPublicRuntimeConfig } from "@thrivereflections/realtime-config";
 
 export async function GET() {
-  const result = validateModel();
-
-  if (!result.success) {
-    return NextResponse.json(
-      {
-        error: result.error,
-        availableModels: AVAILABLE_MODELS,
-      },
-      { status: result.error?.includes("not set") ? 500 : 400 }
-    );
-  }
-
-  return NextResponse.json({
-    model: result.model,
-    availableModels: AVAILABLE_MODELS,
-  });
+  const publicConfig = loadPublicRuntimeConfig();
+  return NextResponse.json(publicConfig);
 }
 ```
 
@@ -179,18 +174,56 @@ export async function GET() {
 ```typescript
 // src/app/api/realtime/session/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { loadRuntimeConfig } from "@thrivereflections/realtime-config";
+import { loadRuntimeConfig, getAgentConfigWithUser } from "@thrivereflections/realtime-config";
 import { createLoggerFromEnv } from "@thrivereflections/realtime-observability";
+import { checkRateLimit, RATE_LIMITS } from "@thrivereflections/realtime-security";
 
 export const runtime = "edge";
 
 export async function POST(request: NextRequest) {
-  const logger = createLoggerFromEnv();
-  const config = loadRuntimeConfig();
+  const clientSessionId = request.headers.get("x-client-session-id");
+  const correlationId = request.headers.get("x-correlation-id");
+  const clientIp = request.ip;
+
+  const logger = createLoggerFromEnv({
+    clientSessionId,
+    correlationId,
+    openaiSessionId: undefined,
+    toolCallId: undefined,
+  });
 
   try {
-    // Create OpenAI session using platform configuration
-    const openaiResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
+    // Apply rate limiting
+    if (clientIp) {
+      const { success, remaining, reset } = await checkRateLimit(
+        "session_creation",
+        clientIp,
+        RATE_LIMITS.SESSION_CREATION
+      );
+
+      if (!success) {
+        logger.warn("Rate limit exceeded for session creation", {
+          clientSessionId,
+          correlationId,
+          remaining,
+          resetTime: reset,
+        });
+        return new NextResponse("Too Many Requests", {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": String(RATE_LIMITS.SESSION_CREATION.max),
+            "X-RateLimit-Remaining": String(remaining),
+            "X-RateLimit-Reset": String(reset),
+          },
+        });
+      }
+    }
+
+    const config = loadRuntimeConfig();
+    const agentConfig = getAgentConfigWithUser({ sub: "anonymous", tenant: "default" }, {});
+
+    // Create OpenAI session
+    const openaiResponse = await fetch(`${config.baseUrl}/v1/realtime`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${config.openaiKey}`,
@@ -198,29 +231,68 @@ export async function POST(request: NextRequest) {
         "OpenAI-Beta": "realtime=v1",
       },
       body: JSON.stringify({
-        model: config.model, // Uses platform's model configuration
-        voice: "alloy",
-        instructions: "You are a helpful AI assistant.",
-        input_audio_format: "pcm16",
-        output_audio_format: "pcm16",
+        model: config.model,
+        voice: agentConfig.voice,
+        instructions: agentConfig.persona,
+        input_audio: {
+          sample_rate: 24000,
+          type: "pcm",
+        },
+        response_audio: {
+          sample_rate: 24000,
+          type: "pcm",
+        },
         turn_detection: {
           type: "server_vad",
           threshold: 0.5,
           prefix_padding_ms: 300,
           silence_duration_ms: 500,
         },
+        temperature: 0.8,
       }),
     });
 
     if (!openaiResponse.ok) {
-      throw new Error(`OpenAI API error: ${openaiResponse.status}`);
+      const errorText = await openaiResponse.text();
+      logger.error("OpenAI session creation failed", {
+        clientSessionId,
+        correlationId,
+        status: openaiResponse.status,
+        error: errorText,
+      });
+      throw new Error(`Failed to create OpenAI session: ${openaiResponse.status}`);
     }
 
     const sessionData = await openaiResponse.json();
-    return NextResponse.json(sessionData);
+
+    logger.info("Session created successfully", {
+      clientSessionId,
+      correlationId,
+      model: config.model,
+    });
+
+    // Return the session configuration for the client
+    const response = {
+      sessionId: clientSessionId,
+      transport: config.featureFlags.transport,
+      config: agentConfig,
+      timings: {
+        sessionRequested: Date.now(),
+        sessionCreated: Date.now(),
+      },
+      client_secret: sessionData.client_secret, // Include the client_secret for the client to use
+      model: config.model,
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
-    logger.error("Session creation failed", { error });
-    return NextResponse.json({ error: "Failed to create session" }, { status: 500 });
+    logger.error("Session creation failed", {
+      clientSessionId,
+      correlationId,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 ```

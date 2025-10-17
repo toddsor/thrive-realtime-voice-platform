@@ -120,6 +120,44 @@ console.log(userConfig);
 // }
 ```
 
+### Custom Agent Configurations
+
+Create custom agent configurations for different use cases:
+
+```typescript
+import {
+  createCustomAgentConfig,
+  agentConfigs,
+  getAgentConfigForContext,
+  validateAgentConfig,
+} from "@thrivereflections/realtime-config";
+
+// Simple override
+const customAgent = createCustomAgentConfig({
+  voice: "nova",
+  persona: "You are a helpful technical assistant.",
+  featureFlags: {
+    memory: "short",
+  },
+});
+
+// Use pre-built configurations
+const supportAgent = agentConfigs.support; // Empathetic support agent
+const salesAgent = agentConfigs.sales; // Persuasive sales agent
+const techAgent = agentConfigs.technical; // Precise technical agent
+
+// Context-based selection
+const agent = getAgentConfigForContext("support", {
+  user: { sub: "user-123", tenant: "default" },
+});
+
+// Validate configuration
+const validation = validateAgentConfig(agent);
+if (!validation.valid) {
+  console.error("Config errors:", validation.errors);
+}
+```
+
 ### Feature Flags
 
 ```typescript

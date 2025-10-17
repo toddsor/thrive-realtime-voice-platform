@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { loadRuntimeConfig, loadAuthConfig } from "@thrivereflections/realtime-config";
+import {
+  loadRuntimeConfig,
+  loadAuthConfig,
+  getAgentConfigWithUser,
+  featureFlagManager,
+} from "@thrivereflections/realtime-config";
 import { createLoggerFromEnv } from "@thrivereflections/realtime-observability";
-import { getSystemPrompt } from "@/lib/config/systemPrompts";
+import { checkRateLimit, RATE_LIMITS } from "@thrivereflections/realtime-security";
 
 export const runtime = "edge";
 
@@ -14,9 +19,37 @@ export async function POST(request: NextRequest) {
   logger.setSessionIds(clientSessionId || undefined);
 
   try {
+    // Rate limiting check
+    const rateLimitResult = checkRateLimit(request, RATE_LIMITS.SESSION_CREATION);
+    if (!rateLimitResult.allowed) {
+      logger.warn("Rate limit exceeded for session creation", {
+        clientSessionId,
+        correlationId,
+        remaining: rateLimitResult.remaining,
+        resetTime: rateLimitResult.resetTime,
+      });
+
+      return NextResponse.json(
+        {
+          error: "Rate limit exceeded",
+          remaining: rateLimitResult.remaining,
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": RATE_LIMITS.SESSION_CREATION.maxRequests.toString(),
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+          },
+        }
+      );
+    }
+
     logger.info("Session creation requested", {
       clientSessionId,
       correlationId,
+      rateLimitRemaining: rateLimitResult.remaining,
     });
     logger.logLatencyMark("sessionRequested", Date.now());
 
@@ -62,155 +95,101 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create OpenAI session
-    const openaiResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${config.openaiKey}`,
-        "Content-Type": "application/json",
-        "OpenAI-Beta": "realtime=v1",
-      },
-      body: JSON.stringify({
-        model: config.model,
-        voice: "alloy",
-        instructions: getSystemPrompt(),
-        tools: config.featureFlags.tools
-          ? [
-              {
-                type: "function",
-                name: "echo",
-                description: "Echo back the input",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    message: {
-                      type: "string",
-                      description: "The message to echo back",
-                    },
-                  },
-                  required: ["message"],
-                },
-              },
-              {
-                type: "function",
-                name: "retrieve_docs",
-                description: "Retrieve relevant documents based on a query",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    query: {
-                      type: "string",
-                      description: "The search query",
-                    },
-                  },
-                  required: ["query"],
-                },
-              },
-            ]
-          : undefined,
-        input_audio_format: "pcm16",
-        output_audio_format: "pcm16",
-        input_audio_transcription: {
-          model: "whisper-1",
-        },
-        turn_detection: {
-          type: "server_vad",
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 500,
-        },
-        temperature: 0.8,
-      }),
-    });
+    // Get user for config generation
+    const appUser = user ? { sub: user.sub, tenant: "default" } : { sub: "anonymous", tenant: "default" };
 
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      logger.error("OpenAI session creation failed", {
-        clientSessionId,
-        correlationId,
-        status: openaiResponse.status,
-        error: errorText,
+    // Evaluate feature flags for this user
+    const userTier = "free"; // In a real app, this would come from user data
+    const flags = featureFlagManager.evaluateFlags(appUser.sub, userTier);
+
+    // Get agent configuration using platform's config system
+    const agentConfig = await getAgentConfigWithUser(appUser, flags);
+
+    // Create token getter function
+    const getToken = async () => {
+      const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.openaiKey}`,
+          "Content-Type": "application/json",
+          "OpenAI-Beta": "realtime=v1",
+        },
+        body: JSON.stringify({
+          model: config.model,
+          voice: agentConfig.voice,
+          instructions: agentConfig.persona,
+          tools: agentConfig.capabilities.includes("tools")
+            ? [
+                {
+                  type: "function",
+                  name: "echo",
+                  description: "Echo back the input",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      message: {
+                        type: "string",
+                        description: "The message to echo back",
+                      },
+                    },
+                    required: ["message"],
+                  },
+                },
+                {
+                  type: "function",
+                  name: "retrieve_docs",
+                  description: "Retrieve relevant documents based on a query",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      query: {
+                        type: "string",
+                        description: "The search query",
+                      },
+                    },
+                    required: ["query"],
+                  },
+                },
+              ]
+            : undefined,
+          input_audio_format: "pcm16",
+          output_audio_format: "pcm16",
+          input_audio_transcription: {
+            model: "whisper-1",
+          },
+          turn_detection: {
+            type: "server_vad",
+            threshold: 0.5,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 500,
+          },
+          temperature: 0.8,
+        }),
       });
 
-      return NextResponse.json({ error: "Failed to create OpenAI session" }, { status: 500 });
-    }
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error("OpenAI session creation failed", {
+          clientSessionId,
+          correlationId,
+          status: response.status,
+          error: errorText,
+        });
+        throw new Error(`Failed to create OpenAI session: ${response.status}`);
+      }
 
-    const sessionData = await openaiResponse.json();
-    const openaiSessionId = sessionData.id;
-    const clientSecret = sessionData.client_secret;
+      const sessionData = await response.json();
+      return sessionData;
+    };
 
-    logger.info("OpenAI session created successfully", {
+    // Create session data directly (avoid circular dependency with initRealtime)
+    const sessionData = await getToken();
+
+    logger.info("Session created successfully", {
       clientSessionId,
       correlationId,
-      openaiSessionId,
-    });
-
-    // Create agent configuration
-    const agentConfig = {
       model: config.model,
-      voice: "alloy",
-      instructions: getSystemPrompt(),
-      tools: config.featureFlags.tools
-        ? [
-            {
-              type: "function",
-              function: {
-                name: "echo",
-                description: "Echo back the input",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    message: {
-                      type: "string",
-                      description: "The message to echo back",
-                    },
-                  },
-                  required: ["message"],
-                },
-              },
-            },
-            {
-              type: "function",
-              function: {
-                name: "retrieve_docs",
-                description: "Retrieve relevant documents based on a query",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    query: {
-                      type: "string",
-                      description: "The search query",
-                    },
-                  },
-                  required: ["query"],
-                },
-              },
-            },
-          ]
-        : undefined,
-      tool_choice: "auto",
-      input_audio_format: "pcm16",
-      output_audio_format: "pcm16",
-      input_audio_transcription: {
-        model: "whisper-1",
-      },
-      turn_detection: {
-        type: "server_vad",
-        threshold: 0.5,
-        prefix_padding_ms: 300,
-        silence_duration_ms: 500,
-      },
-      tools_choice: "auto",
-      temperature: 0.8,
-      max_response_output_tokens: 4096,
-      enable_redaction: true,
-      moderations: {
-        type: "input",
-        input_audio: {
-          type: "input_audio",
-        },
-      },
-    };
+    });
 
     // Create timings object
     const timings = {
@@ -229,8 +208,8 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           sessionId: clientSessionId,
           userId: user?.id || null,
-          openaiSessionId,
-          persona: "assistant",
+          openaiSessionId: clientSessionId, // Use client session ID as the session identifier
+          persona: agentConfig.persona,
           config: agentConfig,
           timings,
           consent: "DECLINED", // Default to declined for privacy
@@ -254,78 +233,20 @@ export async function POST(request: NextRequest) {
 
     logger.logLatencyMark("sessionCreated", Date.now());
 
+    // Return the session configuration for the client
     const response = {
-      sessionId: openaiSessionId,
-      client_secret: clientSecret,
+      sessionId: clientSessionId,
+      transport: config.featureFlags.transport,
+      config: agentConfig,
+      timings,
+      client_secret: sessionData.client_secret, // Include the client_secret for the client to use
       model: config.model,
-      voice: "alloy",
-      instructions: getSystemPrompt(),
-      tools: config.featureFlags.tools
-        ? [
-            {
-              type: "function",
-              function: {
-                name: "echo",
-                description: "Echo back the input",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    message: {
-                      type: "string",
-                      description: "The message to echo back",
-                    },
-                  },
-                  required: ["message"],
-                },
-              },
-            },
-            {
-              type: "function",
-              function: {
-                name: "retrieve_docs",
-                description: "Retrieve relevant documents based on a query",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    query: {
-                      type: "string",
-                      description: "The search query",
-                    },
-                  },
-                  required: ["query"],
-                },
-              },
-            },
-          ]
-        : undefined,
-      tool_choice: "auto",
-      input_audio_format: "pcm16",
-      output_audio_format: "pcm16",
-      input_audio_transcription: {
-        model: "whisper-1",
-      },
-      turn_detection: {
-        type: "server_vad",
-        threshold: 0.5,
-        prefix_padding_ms: 300,
-        silence_duration_ms: 500,
-      },
-      tools_choice: "auto",
-      temperature: 0.8,
-      max_response_output_tokens: 4096,
-      enable_redaction: true,
-      moderations: {
-        type: "input",
-        input_audio: {
-          type: "input_audio",
-        },
-      },
     };
 
     logger.info("Session creation completed successfully", {
       clientSessionId,
       correlationId,
-      openaiSessionId,
+      transport: config.featureFlags.transport,
       duration: Date.now() - timings.sessionRequested,
     });
 

@@ -273,6 +273,52 @@ await realtime.start();
 
 ## Common Patterns
 
+### Code Organization
+
+Structure your code with clear separation between reusable platform code and app-specific code:
+
+```
+your-app/
+├── lib/
+│   ├── platform/          # Reusable platform patterns
+│   │   ├── index.ts       # Platform exports
+│   │   └── tools/         # Custom tools
+│   ├── demo/              # App-specific code
+│   │   └── index.ts       # App exports
+│   ├── utils/             # Shared utilities
+│   └── config/            # Configuration files
+```
+
+**Platform Code** (`lib/platform/`):
+
+- Reusable integration patterns
+- Custom tool implementations
+- Configuration utilities
+- Cost calculation utilities
+
+**App Code** (`lib/demo/`):
+
+- App-specific components
+- Business logic
+- Custom hooks
+- Store implementations
+
+**Example:**
+
+```typescript
+// lib/platform/index.ts - Reusable patterns
+export { calculateUsageCost, createCustomAgentConfig, executeToolCall } from "./utils";
+
+// lib/demo/index.ts - App-specific
+export { useRealtimeVoice, demoStore } from "./hooks";
+
+// Usage in app
+import { calculateUsageCost } from "@/lib/platform";
+import { useRealtimeVoice } from "@/lib/demo";
+```
+
+See the [demo app structure](../../apps/demo-voice/lib/README.md) for complete patterns.
+
 ### Session Management
 
 ```typescript
@@ -606,23 +652,48 @@ These routes are essential for the voice platform to function:
 
 ```typescript
 // app/api/realtime/session/route.ts
-export async function POST(request: Request) {
+import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, RATE_LIMITS } from "@thrivereflections/realtime-security";
+import { loadRuntimeConfig, getAgentConfigWithUser } from "@thrivereflections/realtime-config";
+
+export async function POST(request: NextRequest) {
+  // Rate limiting check
+  const rateLimitResult = checkRateLimit(request, RATE_LIMITS.SESSION_CREATION);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      {
+        error: "Rate limit exceeded",
+        remaining: rateLimitResult.remaining,
+        resetTime: rateLimitResult.resetTime,
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": RATE_LIMITS.SESSION_CREATION.maxRequests.toString(),
+          "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+          "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+        },
+      }
+    );
+  }
+
   const config = await request.json();
 
-  // Validate configuration
-  const validatedConfig = validateConfig(config);
+  // Load and validate configuration
+  const runtimeConfig = loadRuntimeConfig();
+  const agentConfig = getAgentConfigWithUser({ sub: "user-123", tenant: "default" }, {});
 
   // Create session
   const sessionId = generateId();
-  const token = await generateSessionToken(sessionId, validatedConfig);
+  const token = await generateSessionToken(sessionId, agentConfig);
 
-  return Response.json({
+  return NextResponse.json({
     session_id: sessionId,
     client_secret: {
       value: token,
       expires_at: new Date(Date.now() + 3600000).toISOString(),
     },
-    model: validatedConfig.model,
+    model: agentConfig.model,
   });
 }
 ```
@@ -631,19 +702,40 @@ export async function POST(request: Request) {
 
 ```typescript
 // app/api/tools/gateway/route.ts
-export async function POST(request: Request) {
-  const { toolName, arguments: args } = await request.json();
+import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, RATE_LIMITS } from "@thrivereflections/realtime-security";
+import { initializeToolRegistry, executeToolCall } from "@/lib/platform";
 
-  // Check rate limit
-  const isAllowed = await checkAPIRateLimit(request);
-  if (!isAllowed) {
-    return new Response("Rate limit exceeded", { status: 429 });
+export async function POST(request: NextRequest) {
+  // Rate limiting check
+  const rateLimitResult = checkRateLimit(request, RATE_LIMITS.TOOL_CALLS);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      {
+        error: "Rate limit exceeded",
+        remaining: rateLimitResult.remaining,
+        resetTime: rateLimitResult.resetTime,
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": RATE_LIMITS.TOOL_CALLS.maxRequests.toString(),
+          "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+          "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+        },
+      }
+    );
   }
 
-  // Execute tool
-  const result = await gateway.execute(toolName, args);
+  const toolCall = await request.json();
 
-  return Response.json(result);
+  // Initialize tool registry
+  initializeToolRegistry();
+
+  // Execute tool call using registry pattern
+  const result = await executeToolCall(toolCall);
+
+  return NextResponse.json(result);
 }
 ```
 

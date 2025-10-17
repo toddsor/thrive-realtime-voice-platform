@@ -1,5 +1,11 @@
 // Configuration loader functions
-export { loadRuntimeConfig, loadDatabaseConfig, loadAuthConfig, loadAllConfigs } from "./loader";
+export {
+  loadRuntimeConfig,
+  loadPublicRuntimeConfig,
+  loadDatabaseConfig,
+  loadAuthConfig,
+  loadAllConfigs,
+} from "./loader";
 
 // Agent configuration
 export { defaultAgentConfig, getAgentConfigWithUser } from "./agentConfig";
@@ -35,4 +41,11 @@ export {
   getPromptVersion,
   isPromptVersionCurrent,
 } from "./systemPrompts";
+
+// Cost configuration
+export { loadCostConfig, getPricingModel, validateCostConfig, getCostConfigSummary } from "./costConfig";
+export type { CostConfig } from "./costConfig";
 export type { SystemPromptConfig } from "./systemPrompts";
+
+// Re-export types from contracts
+export type { RuntimeConfig, PublicRuntimeConfig } from "@thrivereflections/realtime-contracts";

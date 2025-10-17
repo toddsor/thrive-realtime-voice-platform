@@ -45,11 +45,7 @@ const DEFAULT_MODEL_PRICING: Record<string, ModelPricing> = {
   },
 };
 
-export function CostDisplay({
-  className,
-  currentModel = "gpt-realtime",
-  modelPricing = DEFAULT_MODEL_PRICING,
-}: CostDisplayProps) {
+export function CostDisplay({ className, currentModel, modelPricing = DEFAULT_MODEL_PRICING }: CostDisplayProps) {
   const models = Object.entries(modelPricing);
 
   return (

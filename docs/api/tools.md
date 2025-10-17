@@ -75,6 +75,70 @@ const result = await gateway.execute("echo", { message: "Hello, world!" });
 console.log(result); // { success: true, result: "Hello, world!" }
 ```
 
+### Tool Registry Pattern
+
+For scalable tool management, use the registry pattern:
+
+```typescript
+import { ToolCall, ToolCallResponse } from "@thrivereflections/realtime-contracts";
+
+// Create tool handler
+export async function weatherTool(args: { location: string }): Promise<WeatherData> {
+  // Validate input
+  if (!args.location) {
+    throw new Error("Location is required");
+  }
+
+  // Call weather API
+  const data = await fetchWeather(args.location);
+  return data;
+}
+
+// Define tool for OpenAI
+export const weatherToolDefinition = {
+  type: "function" as const,
+  name: "get_weather",
+  description: "Get current weather for a location",
+  parameters: {
+    type: "object",
+    properties: {
+      location: { type: "string", description: "City name" },
+    },
+    required: ["location"],
+  },
+};
+
+// Create tool handler
+export async function handleWeatherToolCall(toolCall: ToolCall): Promise<ToolCallResponse> {
+  try {
+    const result = await weatherTool(toolCall.parameters);
+    return {
+      tool_call_id: toolCall.id,
+      content: [{ type: "text", text: JSON.stringify(result) }],
+      is_error: false,
+    };
+  } catch (error) {
+    return {
+      tool_call_id: toolCall.id,
+      content: [{ type: "text", text: error.message }],
+      is_error: true,
+    };
+  }
+}
+
+// Register with registry
+import { registerTool } from "./registry";
+
+registerTool({
+  name: "get_weather",
+  description: weatherToolDefinition.description,
+  parameters: weatherToolDefinition.parameters,
+  handler: handleWeatherToolCall,
+});
+```
+
+See the [demo app](../../apps/demo-voice/lib/tools/) for complete examples.
+
 ### RAG with Vector Store
 
 ```typescript

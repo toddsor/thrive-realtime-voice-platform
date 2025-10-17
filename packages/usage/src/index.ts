@@ -3,11 +3,14 @@ export {
   CostEstimator,
   costEstimator,
   estimateSessionCost,
-  formatCost,
   getCostSummary,
   calculateCachingSavings,
+  calculateRealtimeCost,
+  calculateUsageCost,
+  getCostBreakdown,
+  PRICING_MODELS,
 } from "./costEstimator";
-export type { CostRates, CostBreakdown, CostEstimate } from "./costEstimator";
+export type { CostRates, CostBreakdown, CostEstimate, DetailedCostRates, DetailedCostBreakdown } from "./costEstimator";
 
 // Usage tracking
 export { usageTracker } from "./usageTracker";

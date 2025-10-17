@@ -2,6 +2,52 @@
 
 The Thrive Realtime Voice Platform provides comprehensive security features including content safety validation, PII redaction, rate limiting, and payload validation. The security system is designed to protect both users and the platform from various threats while maintaining performance and usability.
 
+## Configuration Security
+
+### Server vs Client Configuration
+
+The platform provides two configuration loaders to prevent accidental exposure of sensitive data:
+
+- **`loadRuntimeConfig()`** - Returns full config including API keys. Use **only** in server-side code.
+- **`loadPublicRuntimeConfig()`** - Returns safe config without secrets. Use in API routes that expose config to frontend.
+
+**❌ Wrong:**
+
+```typescript
+// This exposes the API key!
+const config = loadRuntimeConfig();
+return NextResponse.json(config);
+```
+
+**✅ Correct:**
+
+```typescript
+// This is safe for client exposure
+const config = loadPublicRuntimeConfig();
+return NextResponse.json(config);
+```
+
+### Type Safety
+
+The TypeScript types enforce security at compile time:
+
+```typescript
+// Server-side only - includes sensitive data
+const serverConfig: RuntimeConfig = loadRuntimeConfig();
+// serverConfig.openaiKey is available
+
+// Client-safe - excludes sensitive data
+const publicConfig: PublicRuntimeConfig = loadPublicRuntimeConfig();
+// publicConfig.openaiKey does not exist (TypeScript error)
+```
+
+### Best Practices
+
+1. **Always use `loadPublicRuntimeConfig()`** in API routes that serve data to the frontend
+2. **Use `loadRuntimeConfig()`** only in server-side code that needs API keys
+3. **Never pass the full config** to client-side components
+4. **Review API routes** to ensure they don't accidentally expose sensitive data
+
 ## Content Safety
 
 ### Content Validation

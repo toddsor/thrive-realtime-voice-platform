@@ -4,6 +4,8 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
 import { Badge } from "./badge";
 import { DollarSign, Zap, Activity, TrendingUp } from "lucide-react";
+import { getCostBreakdown } from "@thrivereflections/realtime-usage";
+import { formatCost } from "../../lib/utils/costCalculation";
 
 export interface UsageData {
   sessionId: string;
@@ -30,7 +32,6 @@ export interface LiveCostTrackerProps {
   isActive?: boolean;
   className?: string;
   currentModel?: string;
-  modelPricing?: Record<string, any>;
 }
 
 interface LiveUsage {
@@ -51,49 +52,14 @@ interface LiveUsage {
   estimatedCost: number;
 }
 
-interface CostBreakdown {
-  audioCost: number;
-  inputTokenCost: number;
-  outputTokenCost: number;
-  cachedTokenDiscount: number;
-  toolCallCost: number;
-  retrievalCost: number;
-  totalCost: number;
-}
-
-// Model-specific pricing
-const DEFAULT_MODEL_PRICING = {
-  "gpt-realtime": {
-    textInputTokenPer1k: 0.004, // $4.00 per 1M tokens
-    textOutputTokenPer1k: 0.016, // $16.00 per 1M tokens
-    textCachedTokenPer1k: 0.0004, // $0.40 per 1M tokens
-    audioInputTokenPer1k: 0.032, // $32.00 per 1M tokens
-    audioOutputTokenPer1k: 0.064, // $64.00 per 1M tokens
-    audioCachedTokenPer1k: 0.0004, // $0.40 per 1M tokens
-  },
-  "gpt-realtime-mini": {
-    textInputTokenPer1k: 0.0006, // $0.60 per 1M tokens
-    textOutputTokenPer1k: 0.0024, // $2.40 per 1M tokens
-    textCachedTokenPer1k: 0.00006, // $0.06 per 1M tokens
-    audioInputTokenPer1k: 0.01, // $10.00 per 1M tokens
-    audioOutputTokenPer1k: 0.02, // $20.00 per 1M tokens
-    audioCachedTokenPer1k: 0.0003, // $0.30 per 1M tokens
-  },
-};
-
-const OTHER_COSTS = {
-  toolCallOverhead: 0.001, // $0.001 per tool call
-  retrievalOverhead: 0.002, // $0.002 per retrieval
-  sessionOverhead: 0.005, // $0.005 per session
-  connectionOverhead: 0.001, // $0.001 per connection
-};
+// Remove the local cost calculation interfaces and constants
+// We'll use the centralized cost calculation from the usage package
 
 export function LiveCostTracker({
   usageData,
   isActive = false,
   className,
-  currentModel = "gpt-realtime",
-  modelPricing = DEFAULT_MODEL_PRICING,
+  currentModel = "gpt-realtime-mini",
 }: LiveCostTrackerProps) {
   // Convert usageData to LiveUsage format
   const liveUsage: LiveUsage = usageData
@@ -130,64 +96,37 @@ export function LiveCostTracker({
         estimatedCost: 0,
       };
 
-  // Calculate cost breakdown
-  const calculateCostBreakdown = (): CostBreakdown => {
-    const pricing = modelPricing[currentModel as keyof typeof modelPricing] || modelPricing["gpt-realtime-mini"];
+  // Use centralized cost calculation from the usage package
+  const costBreakdown = usageData
+    ? getCostBreakdown(
+        {
+          textTokensInput: liveUsage.textTokensInput,
+          textTokensOutput: liveUsage.textTokensOutput,
+          textTokensCached: liveUsage.textTokensCached,
+          audioTokensInput: liveUsage.audioTokensInput,
+          audioTokensOutput: liveUsage.audioTokensOutput,
+          audioTokensCached: liveUsage.audioTokensCached,
+          toolCalls: liveUsage.toolCalls,
+          retrievals: liveUsage.retrievals,
+        },
+        currentModel as "gpt-realtime" | "gpt-realtime-mini"
+      )
+    : {
+        textInputCost: 0,
+        textOutputCost: 0,
+        textCachedCost: 0,
+        audioInputCost: 0,
+        audioOutputCost: 0,
+        audioCachedCost: 0,
+        toolCallCost: 0,
+        retrievalCost: 0,
+        sessionOverhead: 0,
+        connectionOverhead: 0,
+        totalCost: 0,
+      };
 
-    // Calculate text input tokens (total text input - text cached)
-    const textInputTokens = Math.max(0, liveUsage.textTokensInput - liveUsage.textTokensCached);
-    const textInputCost = (textInputTokens / 1000) * pricing.textInputTokenPer1k;
-
-    // Calculate text cached tokens as a separate cost (not discount)
-    const textCachedTokenCost = (liveUsage.textTokensCached / 1000) * pricing.textCachedTokenPer1k;
-
-    // Calculate text output tokens
-    const textOutputTokenCost = (liveUsage.textTokensOutput / 1000) * pricing.textOutputTokenPer1k;
-
-    // Calculate audio input tokens (total audio input - audio cached)
-    const audioInputTokens = Math.max(0, liveUsage.audioTokensInput - liveUsage.audioTokensCached);
-    const audioInputCost = (audioInputTokens / 1000) * pricing.audioInputTokenPer1k;
-
-    // Calculate audio cached tokens as a separate cost (not discount)
-    const audioCachedTokenCost = (liveUsage.audioTokensCached / 1000) * pricing.audioCachedTokenPer1k;
-
-    // Calculate audio output tokens
-    const audioOutputTokenCost = (liveUsage.audioTokensOutput / 1000) * pricing.audioOutputTokenPer1k;
-
-    const toolCallCost = liveUsage.toolCalls * OTHER_COSTS.toolCallOverhead;
-    const retrievalCost = liveUsage.retrievals * OTHER_COSTS.retrievalOverhead;
-
-    const totalCost =
-      textInputCost +
-      textCachedTokenCost +
-      textOutputTokenCost +
-      audioInputCost +
-      audioCachedTokenCost +
-      audioOutputTokenCost +
-      toolCallCost +
-      retrievalCost;
-
-    return {
-      audioCost: audioInputCost + audioCachedTokenCost + audioOutputTokenCost,
-      inputTokenCost: textInputCost,
-      outputTokenCost: textOutputTokenCost,
-      cachedTokenDiscount: textCachedTokenCost, // Now showing as cost, not discount
-      toolCallCost,
-      retrievalCost,
-      totalCost,
-    };
-  };
-
-  const costBreakdown = calculateCostBreakdown();
-  const pricing = modelPricing[currentModel as keyof typeof modelPricing] || modelPricing["gpt-realtime-mini"];
-
-  // Format cost
-  const formatCost = (cost: number): string => {
-    if (cost < 0.001) {
-      return `$${(cost * 1000).toFixed(2)}m`;
-    }
-    return `$${cost.toFixed(4)}`;
-  };
+  // Use centralized cost formatting from config package
+  // formatCost is already imported from @thrivereflections/realtime-config
 
   // Format duration
   const formatDuration = (ms: number): string => {
@@ -226,7 +165,7 @@ export function LiveCostTracker({
       <CardContent>
         <div className="space-y-4">
           {/* Current Usage Summary */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{formatCost(costBreakdown.totalCost)}</div>
               <div className="text-sm text-muted-foreground">Total Cost</div>
@@ -234,16 +173,6 @@ export function LiveCostTracker({
             <div className="text-center">
               <div className="text-2xl font-bold">{formatDuration(liveUsage.durationMs)}</div>
               <div className="text-sm text-muted-foreground">Duration</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">
-                {liveUsage.tokensInput + liveUsage.tokensOutput + liveUsage.tokensCached}
-              </div>
-              <div className="text-sm text-muted-foreground">Total Tokens</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">{liveUsage.tokensCached}</div>
-              <div className="text-sm text-muted-foreground">Cached Tokens</div>
             </div>
           </div>
 
@@ -273,39 +202,34 @@ export function LiveCostTracker({
                     <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 font-medium">
                       <div className="flex items-center gap-2">
                         <Zap className="h-4 w-4 text-blue-500" />
-                        Audio (per 1M tokens)
+                        Audio
                       </div>
                     </td>
                     <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-mono">
-                      {formatCost(
-                        (Math.max(0, liveUsage.audioTokensInput - liveUsage.audioTokensCached) / 1000) *
-                          pricing.audioInputTokenPer1k
-                      )}
+                      {formatCost(costBreakdown.audioInputCost)}
                     </td>
                     <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-mono text-green-600">
-                      {liveUsage.audioTokensCached > 0
-                        ? formatCost((liveUsage.audioTokensCached / 1000) * pricing.audioCachedTokenPer1k)
-                        : "$0.00"}
+                      {liveUsage.audioTokensCached > 0 ? formatCost(costBreakdown.audioCachedCost) : "$0.00"}
                     </td>
                     <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-mono">
-                      {formatCost((liveUsage.audioTokensOutput / 1000) * pricing.audioOutputTokenPer1k)}
+                      {formatCost(costBreakdown.audioOutputCost)}
                     </td>
                   </tr>
                   <tr className="bg-gray-50 dark:bg-gray-800">
                     <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 font-medium">
                       <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4 text-purple-500" />
-                        Text (per 1M tokens)
+                        Text
                       </div>
                     </td>
                     <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-mono">
-                      {formatCost(costBreakdown.inputTokenCost)}
+                      {formatCost(costBreakdown.textInputCost)}
                     </td>
                     <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-mono text-green-600">
-                      {liveUsage.textTokensCached > 0 ? formatCost(costBreakdown.cachedTokenDiscount) : "$0.00"}
+                      {liveUsage.textTokensCached > 0 ? formatCost(costBreakdown.textCachedCost) : "$0.00"}
                     </td>
                     <td className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-center font-mono">
-                      {formatCost(costBreakdown.outputTokenCost)}
+                      {formatCost(costBreakdown.textOutputCost)}
                     </td>
                   </tr>
                 </tbody>

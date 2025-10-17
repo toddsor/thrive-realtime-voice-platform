@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { healthCheckManager, HealthCheckManager } from "@thrivereflections/realtime-sre";
 import { ConsoleLogger } from "@thrivereflections/realtime-observability";
+import { loadRuntimeConfig } from "@thrivereflections/realtime-config";
 
 export const runtime = "edge";
 
@@ -28,7 +29,8 @@ const systemHealthChecker = HealthCheckManager.createChecker(
 const openaiHealthChecker = HealthCheckManager.createChecker(
   "openai",
   async () => {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const config = loadRuntimeConfig();
+    const apiKey = config.openaiKey;
 
     if (!apiKey) {
       return {

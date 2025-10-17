@@ -16,6 +16,18 @@ Welcome to the Thrive Realtime Voice Platform! This guide will help you get up a
 3. [Quick Start Guide](./quick-start.md) - Build your first voice app
 4. [Creating Your First App](./first-app.md) - Extend the platform
 
+## Reference Implementation
+
+The [Demo App](../../apps/demo-voice/README.md) serves as a complete reference implementation showcasing:
+
+- **Platform Integration**: Proper use of all platform packages
+- **Security Features**: Rate limiting, content safety, and PII redaction
+- **Extensibility Patterns**: Custom tools, configurations, and patterns
+- **Code Organization**: Clean separation between platform and demo code
+- **Developer Experience**: Clear patterns and comprehensive examples
+
+Start with the demo app to understand best practices, then adapt the patterns for your own application.
+
 ## Advanced Setup
 
 For production applications with specific requirements:

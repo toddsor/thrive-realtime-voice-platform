@@ -6,37 +6,41 @@ import { useState, useEffect } from "react";
 export const dynamic = "force-dynamic";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { SupabaseAuthProvider } from "@/lib/auth/authProvider";
+import { authProvider } from "@/lib/auth/authProvider";
 import { EmailRegisterForm } from "@/components/auth/email-register-form";
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [authProvider, setAuthProvider] = useState<SupabaseAuthProvider | null>(null);
+  const [auth, setAuth] = useState<typeof authProvider | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const supabase = createClient();
-    const provider = new SupabaseAuthProvider();
-    provider.setSupabaseClient(supabase);
-    setAuthProvider(provider);
+    setAuth(authProvider);
   }, []);
 
   const handleEmailRegister = async (email: string, password: string) => {
-    if (!authProvider) return;
-
     setIsLoading(true);
     setError(null);
 
     try {
-      const { user, error } = await authProvider.signUp(email, password);
+      const supabase = createClient();
+      if (!supabase) {
+        setError("Authentication service not available");
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
       if (error) {
         setError(error.message || "Failed to create account");
         return;
       }
 
-      if (user) {
+      if (data.user) {
         // Redirect to demo app after successful registration
         router.push("/demo");
       }
@@ -48,7 +52,7 @@ export default function RegisterPage() {
     }
   };
 
-  if (!authProvider) {
+  if (!auth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">Loading...</div>

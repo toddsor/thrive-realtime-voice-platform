@@ -1,11 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { loadAuthConfig } from '@thrivereflections/realtime-config'
 
 export async function createClient() {
   const cookieStore = await cookies()
+  const authConfig = loadAuthConfig()
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = authConfig.supabase?.url
+  const supabaseAnonKey = authConfig.supabase?.anonKey
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabase configuration is missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.')

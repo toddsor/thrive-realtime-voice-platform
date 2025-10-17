@@ -6,6 +6,8 @@ import { ToolGateway, echoTool, retrieveTool } from "@thrivereflections/realtime
 import { createPrismaStore } from "@thrivereflections/realtime-store-prisma";
 import { createClient } from "@/lib/supabase/server";
 import { createUserSyncService } from "@thrivereflections/realtime-auth-supabase";
+import { checkRateLimit, RATE_LIMITS } from "@thrivereflections/realtime-security";
+import { initializeToolRegistry, executeToolCall, getAllToolDefinitions } from "@/lib/platform";
 
 export const runtime = "nodejs";
 
@@ -18,6 +20,33 @@ export async function POST(request: NextRequest) {
   logger.setSessionIds(clientSessionId || undefined);
 
   try {
+    // Rate limiting check
+    const rateLimitResult = checkRateLimit(request, RATE_LIMITS.TOOL_CALLS);
+    if (!rateLimitResult.allowed) {
+      logger.warn("Rate limit exceeded for tool calls", {
+        clientSessionId,
+        correlationId,
+        remaining: rateLimitResult.remaining,
+        resetTime: rateLimitResult.resetTime,
+      });
+
+      return NextResponse.json(
+        {
+          error: "Rate limit exceeded",
+          remaining: rateLimitResult.remaining,
+          resetTime: rateLimitResult.resetTime,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": RATE_LIMITS.TOOL_CALLS.maxRequests.toString(),
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+          },
+        }
+      );
+    }
+
     // Load configurations
     const runtimeConfig = loadRuntimeConfig();
     const databaseConfig = loadDatabaseConfig();
@@ -83,29 +112,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Payload too large" }, { status: 413 });
     }
 
+    // Initialize tool registry
+    initializeToolRegistry();
+
     // Create tool gateway with configuration
     const toolGateway = new ToolGateway({
       policies: runtimeConfig.policies,
-      allowList: ["echo", "retrieve_docs"],
+      allowList: ["echo", "retrieve_docs", "get_weather", "create_calendar_event"], // Include custom tools
       logger: logger,
     });
 
-    // Register tools
+    // Register platform tools
     toolGateway.register("echo", echoTool);
     toolGateway.register("retrieve_docs", retrieveTool);
 
-    // Execute tool call
-    const result = await toolGateway.execute(toolCall.name, toolCall.args, {
-      userId: appUser?.sub || undefined,
-      sessionId: clientSessionId || undefined,
-    });
-
-    // Create response
-    const response: ToolCallResponse = {
-      id: toolCall.id,
-      ok: true,
-      result: result,
-    };
+    // Execute tool call using registry pattern
+    const response = await executeToolCall(toolCall);
 
     // Persist tool event if database is configured
     if (databaseConfig) {
@@ -114,7 +136,7 @@ export async function POST(request: NextRequest) {
         await store.appendToolEvent(clientSessionId || "unknown", {
           name: toolCall.name,
           args: toolCall.args,
-          result: result,
+          result: response.result,
         });
       } catch (error) {
         logger.warn("Failed to persist tool event", {

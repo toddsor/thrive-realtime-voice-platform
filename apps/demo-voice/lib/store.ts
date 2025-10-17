@@ -1,9 +1,11 @@
 import { createDemoStore, DemoStoreConfig, DemoStoreDeps } from "./demoStore";
 import { redact } from "@thrivereflections/realtime-security";
+import { loadDatabaseConfig } from "@thrivereflections/realtime-config";
 
 // Store configuration
+const databaseConfig = loadDatabaseConfig();
 const config: DemoStoreConfig = {
-  databaseUrl: process.env.DATABASE_URL || "",
+  databaseUrl: databaseConfig?.url || "",
   logLevel: process.env.NODE_ENV === "development" ? "warn" : "error",
 };
 

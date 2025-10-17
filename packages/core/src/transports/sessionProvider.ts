@@ -4,11 +4,12 @@ export interface SessionTokenData {
   model: string;
 }
 
-export async function getSessionToken(): Promise<SessionTokenData> {
-  const response = await fetch('/api/realtime/session', {
-    method: 'POST',
+export async function getSessionToken(baseUrl?: string): Promise<SessionTokenData> {
+  const url = baseUrl ? `${baseUrl}/api/realtime/session` : "/api/realtime/session";
+  const response = await fetch(url, {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 

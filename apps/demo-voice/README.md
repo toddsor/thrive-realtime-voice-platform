@@ -1,12 +1,18 @@
 # Demo Voice App
 
-A complete reference implementation of the Thrive Realtime Voice Platform, showcasing all platform packages working together in a production-ready Next.js application.
+A comprehensive reference implementation of the Thrive Realtime Voice Platform, showcasing all platform packages working together in a production-ready Next.js application with advanced patterns, security features, and extensibility examples.
 
 > **📚 Platform Documentation**: See the [main platform docs](../../docs/) for complete documentation, architecture overview, and getting started guides.
 
 ## Overview
 
-This demo app demonstrates the [Multi-App Schema Extension Pattern](../../docs/architecture/multi-app-pattern.md) by extending the platform's base schema with demo-specific tables and operations.
+This demo app demonstrates the [Multi-App Schema Extension Pattern](../../docs/architecture/multi-app-pattern.md) by extending the platform's base schema with demo-specific tables and operations. It serves as a complete reference implementation showing best practices for:
+
+- **Platform Integration**: Proper use of all platform packages
+- **Security**: Rate limiting, content safety, and PII redaction
+- **Extensibility**: Custom tools, configurations, and patterns
+- **Code Organization**: Clean separation between platform and demo code
+- **Developer Experience**: Clear patterns and comprehensive examples
 
 ## Features
 
@@ -34,11 +40,46 @@ This demo app demonstrates the [Multi-App Schema Extension Pattern](../../docs/a
 
 ### Advanced Features
 
+- **Security & Rate Limiting**: API protection with configurable rate limits
 - **Health Monitoring**: System health checks and metrics
-- **Usage Analytics**: Detailed usage tracking and quotas
+- **Usage Analytics**: Detailed usage tracking and cost calculation
 - **Content Safety**: PII redaction and content filtering
-- **Rate Limiting**: API protection and abuse prevention
 - **SRE Tools**: Circuit breakers, alerts, and synthetic monitoring
+- **Custom Tools**: Extensible tool system with registry pattern
+- **Configuration Management**: Flexible agent configuration with validation
+- **Cost Tracking**: Centralized cost calculation utilities
+
+## Key Features & Patterns
+
+### 🔒 Security Features
+
+- **Rate Limiting**: Configurable rate limits on API endpoints
+- **Content Safety**: PII redaction and content filtering
+- **Input Validation**: Comprehensive validation for all inputs
+
+### 🛠️ Extensibility Patterns
+
+- **Tool Registry**: Scalable pattern for adding custom tools
+- **Agent Configurations**: Flexible agent setup with validation
+- **Configuration Management**: Context-based configuration selection
+
+### 📊 Cost Management
+
+- **Centralized Calculation**: Shared cost calculation utilities
+- **Real-time Tracking**: Live cost monitoring during sessions
+- **Model Support**: Both GPT-4 Realtime and Mini models
+
+### 🏗️ Code Organization
+
+- **Platform/Demo Separation**: Clear separation of reusable vs demo code
+- **Type Safety**: Comprehensive TypeScript interfaces
+- **Error Handling**: Robust error handling throughout
+
+### 📚 Developer Experience
+
+- **Clear Examples**: Comprehensive examples for all patterns
+- **Documentation**: Inline documentation and README guides
+- **Best Practices**: Demonstrates platform integration best practices
 
 ## Database Schema
 
@@ -175,6 +216,18 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - `@thrivereflections/realtime-security` - Security and content safety
 - `@thrivereflections/realtime-sre` - SRE tools and monitoring
 
+### Platform Integration Patterns
+
+This demo demonstrates proper integration with all platform packages:
+
+- **High-Level APIs**: Uses `initRealtime()` for voice connections
+- **Configuration**: Leverages `getAgentConfigWithUser()` and feature flags
+- **Authentication**: Uses `SupabaseAuthProvider` from platform
+- **Security**: Implements rate limiting with platform utilities
+- **Cost Tracking**: Uses centralized cost calculation utilities
+- **Tool Management**: Demonstrates registry pattern for extensibility
+- **Error Handling**: Proper error handling and logging throughout
+
 ### Application Structure
 
 ```
@@ -182,8 +235,8 @@ apps/demo-voice/
 ├── app/
 │   ├── demo/                 # Main voice interface
 │   ├── api/                  # API routes
-│   │   ├── realtime/         # Voice session management
-│   │   ├── tools/            # Tool gateway
+│   │   ├── realtime/         # Voice session management (with rate limiting)
+│   │   ├── tools/            # Tool gateway (with registry pattern)
 │   │   ├── auth/             # Authentication endpoints
 │   │   ├── internal/         # Internal persistence APIs
 │   │   ├── health/           # Health checks
@@ -195,8 +248,14 @@ apps/demo-voice/
 │   ├── auth/                 # Authentication components
 │   └── ui/                   # UI components
 ├── lib/
+│   ├── platform/             # Reusable platform integration patterns
+│   │   ├── index.ts          # Platform utilities exports
+│   │   └── tools/            # Custom tool examples
+│   ├── demo/                 # Demo-specific code
+│   │   └── index.ts          # Demo utilities exports
 │   ├── hooks/                # React hooks
-│   ├── config/               # Configuration files
+│   ├── config/               # Configuration files with validation
+│   ├── utils/                # Shared utilities (cost calculation)
 │   ├── supabase/             # Supabase client utilities
 │   ├── auth/                 # Auth provider
 │   └── stores/               # Data stores
@@ -253,12 +312,29 @@ apps/demo-voice/
 3. Your sessions will be persisted to the database
 4. View usage history and analytics
 
-### With RAG Tools
+### With Custom Tools
 
-1. Ensure database is configured
-2. The AI can search through documents using the `retrieve_docs` tool
-3. View tool usage in the interface
-4. Monitor retrieval metrics
+1. The demo includes example custom tools:
+   - **Weather Tool**: Ask "What's the weather in New York?"
+   - **Calendar Tool**: Say "Create a meeting for tomorrow at 2 PM"
+2. Tools are managed through the registry pattern
+3. View tool usage and results in the interface
+
+### With Custom Agent Configurations
+
+1. The demo shows different agent types:
+   - **Support Agent**: Empathetic and solution-oriented
+   - **Sales Agent**: Persuasive and focused on needs
+   - **Technical Agent**: Precise and detailed
+2. Agent configurations include validation
+3. Feature flags control behavior (memory, captions, etc.)
+
+### With Security Features
+
+1. API calls are automatically rate-limited
+2. Session creation: 10 per hour per IP
+3. Tool calls: 30 per minute per IP
+4. Rate limit headers are included in responses
 
 ## Development
 
@@ -285,21 +361,38 @@ npm run lint
 
 ### Adding New Tools
 
-1. Create tool handler in `lib/tools/`
-2. Register in `app/api/tools/gateway/route.ts`
-3. Update agent configuration
+1. Create tool handler in `lib/platform/tools/`
+2. Register using the tool registry pattern
+3. Update agent configuration to include new tools
+4. Example: See `weatherTool.ts` and `registry.ts`
+
+### Custom Agent Configurations
+
+1. Use `createCustomAgentConfig()` for simple overrides
+2. Create specialized configs in `agentConfigs` object
+3. Use `getAgentConfigForContext()` for context-based selection
+4. Validate configurations with `validateAgentConfig()`
 
 ### Custom UI Components
 
 1. Add components to `components/ui/`
 2. Use standard React components and shadcn/ui primitives
-3. Use in your application
+3. Follow the platform/demo separation pattern
+4. Export from appropriate index files
 
 ### Custom Authentication
 
 1. Implement auth provider interface
 2. Update configuration
 3. Add UI components
+4. Follow the patterns in `lib/auth/`
+
+### Code Organization
+
+1. **Platform Code**: Put reusable patterns in `lib/platform/`
+2. **Demo Code**: Put demo-specific code in `lib/demo/`
+3. **Utilities**: Shared utilities go in `lib/utils/`
+4. **Configuration**: Agent and system configs in `lib/config/`
 
 ## Troubleshooting
 

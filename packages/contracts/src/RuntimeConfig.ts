@@ -26,6 +26,14 @@ export interface RuntimeConfig {
   policies: PolicyConfig;
 }
 
+export interface PublicRuntimeConfig {
+  model: string;
+  baseUrl?: string;
+  featureFlags: FeatureFlags;
+  policies: PolicyConfig;
+  // Note: openaiKey is intentionally excluded for security
+}
+
 export interface DatabaseConfig {
   url: string;
   directUrl?: string;

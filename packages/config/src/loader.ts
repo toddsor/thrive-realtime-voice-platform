@@ -1,5 +1,6 @@
 import {
   RuntimeConfig,
+  PublicRuntimeConfig,
   FeatureFlags,
   PolicyConfig,
   DatabaseConfig,
@@ -90,6 +91,24 @@ export function loadAuthConfig(): AuthConfig {
             : undefined,
       },
     },
+  };
+}
+
+/**
+ * Load public runtime configuration safe for client-side use.
+ * This excludes sensitive data like API keys.
+ *
+ * Use this in API routes that expose config to the frontend.
+ */
+export function loadPublicRuntimeConfig(): PublicRuntimeConfig {
+  const fullConfig = loadRuntimeConfig();
+
+  // Explicitly construct public config (type-safe)
+  return {
+    model: fullConfig.model,
+    baseUrl: fullConfig.baseUrl,
+    featureFlags: fullConfig.featureFlags,
+    policies: fullConfig.policies,
   };
 }
 

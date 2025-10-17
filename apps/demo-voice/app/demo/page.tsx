@@ -9,14 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useRealtimeVoice } from "@/lib/hooks/useRealtimeVoice";
-import { defaultAgentConfig, getAgentConfigWithUser } from "@/lib/config/agentConfig";
+import { useRealtimeVoice } from "@/lib/demo";
+import { getAgentConfigForContext, validateAgentConfig } from "@/lib/platform";
 import { Mic, MicOff, Phone, PhoneOff, TestTube, Copy, Download, History, Settings, LogOut, User } from "lucide-react";
 import { PrivacyWarningDialog } from "@/components/ui/privacy-warning-dialog";
 import { CostDisplay } from "@/components/ui/cost-display";
 import { LiveCostTracker } from "@/components/ui/live-cost-tracker";
 import { createClient } from "@/lib/supabase/client";
-import { SupabaseAuthProvider } from "@thrivereflections/realtime-auth-supabase";
+import { SupabaseAuthProvider, createAuthProvider, AuthProvider } from "@thrivereflections/realtime-auth-supabase";
 import { InjectableConsoleLogger } from "@thrivereflections/realtime-observability";
 
 export default function VoicePage() {
@@ -25,7 +25,8 @@ export default function VoicePage() {
   const [memoryEnabled, setMemoryEnabled] = useState(false);
   const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
   const [user, setUser] = useState<{ sub: string; email?: string; name?: string; provider?: string } | null>(null);
-  const [authProvider, setAuthProvider] = useState<SupabaseAuthProvider | null>(null);
+  const [authProvider, setAuthProvider] = useState<AuthProvider | null>(null);
+  const [runtimeConfig, setRuntimeConfig] = useState<any>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const {
@@ -48,12 +49,17 @@ export default function VoicePage() {
 
     // Only initialize auth if Supabase is configured
     if (supabase) {
-      const provider = new SupabaseAuthProvider({
+      const provider = createAuthProvider({
         supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
         supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
         logger: new InjectableConsoleLogger(),
       });
-      provider.setSupabaseClient(supabase);
+
+      // Set the Supabase client if it's a SupabaseAuthProvider
+      if (provider instanceof SupabaseAuthProvider) {
+        provider.setSupabaseClient(supabase);
+      }
+
       setAuthProvider(provider);
 
       // Get current user
@@ -65,6 +71,14 @@ export default function VoicePage() {
     }
   }, []);
 
+  // Fetch runtime configuration
+  useEffect(() => {
+    fetch("/api/config/runtime")
+      .then((res) => res.json())
+      .then(setRuntimeConfig)
+      .catch(console.error);
+  }, []);
+
   const handleLogout = async () => {
     if (!authProvider) {
       // If no auth provider, just navigate to home/login
@@ -73,7 +87,9 @@ export default function VoicePage() {
     }
 
     try {
-      await authProvider.signOut();
+      if (authProvider.signOut) {
+        await authProvider.signOut();
+      }
       router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -83,16 +99,26 @@ export default function VoicePage() {
   const handleConnect = async () => {
     setIsConnecting(true);
     try {
-      const configWithUser = await getAgentConfigWithUser();
-      // Update memory setting based on user preference
-      const configWithMemory = {
-        ...configWithUser,
+      // Get agent config for the default context with user overrides
+      const configWithUser = getAgentConfigForContext("default", {
+        user: user ? { sub: user.sub, tenant: "default" } : { sub: "anonymous", tenant: "default" },
         featureFlags: {
-          ...configWithUser.featureFlags,
+          transport: "webrtc" as const,
+          bargeIn: true,
+          captions: "partial" as const,
           memory: memoryEnabled ? ("short" as const) : ("off" as const),
         },
-      };
-      await connect(configWithMemory, user || undefined);
+      });
+
+      // Validate the configuration
+      const validation = validateAgentConfig(configWithUser);
+      if (!validation.valid) {
+        console.error("Invalid agent configuration:", validation.errors);
+        setIsConnecting(false);
+        return;
+      }
+
+      await connect(configWithUser, user || undefined);
       // Don't set isConnecting to false here - let the connection status handle it
     } catch (err) {
       console.error("Connection failed:", err);
@@ -317,7 +343,7 @@ export default function VoicePage() {
             </CardContent>
           </Card>
 
-          {defaultAgentConfig.featureFlags.captions !== "off" && (
+          {connectionStatus === "connected" && (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -502,10 +528,16 @@ export default function VoicePage() {
         {/* Right Column - Cost Tracking */}
         <div className="lg:col-span-3 space-y-6">
           {/* Live Cost Tracker */}
-          <LiveCostTracker usageData={usageData} isActive={connectionStatus === "connected"} />
+          {runtimeConfig && (
+            <LiveCostTracker
+              usageData={usageData}
+              isActive={connectionStatus === "connected"}
+              currentModel={runtimeConfig.model}
+            />
+          )}
 
           {/* Cost Display */}
-          <CostDisplay />
+          {runtimeConfig && <CostDisplay currentModel={runtimeConfig.model} />}
         </div>
       </div>
 
