@@ -1,6 +1,6 @@
 {
   "name": "@thrivereflections/realtime-usage",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Usage tracking and cost management for the Thrive Realtime Voice Platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

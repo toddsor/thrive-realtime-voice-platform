@@ -1,6 +1,6 @@
 {
   "name": "@thrivereflections/realtime-core",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Core runtime logic for the Thrive Realtime Voice Platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

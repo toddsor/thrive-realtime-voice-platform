@@ -1,6 +1,6 @@
 {
   "name": "@thrivereflections/realtime-config",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Configuration loader for the Thrive Realtime Voice Platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
