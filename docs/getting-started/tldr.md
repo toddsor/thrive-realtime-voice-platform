@@ -37,7 +37,7 @@ cd my-voice-app
 Install the Thrive platform packages from npm:
 
 ```bash
-npm install @thrivereflections/realtime-core @thrivereflections/realtime-config @thrivereflections/realtime-contracts @thrivereflections/realtime-observability @thrivereflections/realtime-transport-websocket @thrivereflections/realtime-security @thrivereflections/realtime-usage
+npm install @thrivereflections/realtime-core @thrivereflections/realtime-config @thrivereflections/realtime-contracts @thrivereflections/realtime-observability @thrivereflections/realtime-transport-webrtc @thrivereflections/realtime-transport-websocket @thrivereflections/realtime-security @thrivereflections/realtime-usage
 ```
 
 ### C. Set Up Environment
@@ -46,6 +46,9 @@ npm install @thrivereflections/realtime-core @thrivereflections/realtime-config 
 echo OPENAI_API_KEY=your_key > .env
 # Optional: Override default OpenAI base URL
 # echo OPENAI_BASE_URL=https://api.openai.com >> .env
+
+# Optional: Configure transport (defaults to WebRTC)
+# echo FEATURE_TRANSPORT=websocket >> .env  # Use WebSocket instead of WebRTC
 ```
 
 ### D. Create Voice App
@@ -343,6 +346,7 @@ export async function POST(request: NextRequest) {
 ## Key Improvements in This Pattern
 
 ✅ **Uses `initRealtime()`** - Platform's high-level API instead of direct transport  
+✅ **Includes both transports** - WebRTC and WebSocket packages for maximum compatibility  
 ✅ **Proper session tracking** - Includes `x-client-session-id` header  
 ✅ **Correct token handling** - Handles both `client_secret` and `sessionId` formats  
 ✅ **Structured logging** - Uses platform's logging utilities  
