@@ -1,6 +1,6 @@
 export interface RateLimitConfig {
-  windowMs: number;      // Time window in milliseconds
-  maxRequests: number;   // Max requests per window
+  windowMs: number; // Time window in milliseconds
+  maxRequests: number; // Max requests per window
   keyGenerator: (req: Request) => string; // IP or user ID
 }
 
@@ -28,7 +28,7 @@ export class RateLimiter {
       // First request for this key
       this.entries.set(key, {
         count: 1,
-        resetTime: now + config.windowMs
+        resetTime: now + config.windowMs,
       });
       return true;
     }
@@ -37,7 +37,7 @@ export class RateLimiter {
       // Window has expired, reset
       this.entries.set(key, {
         count: 1,
-        resetTime: now + config.windowMs
+        resetTime: now + config.windowMs,
       });
       return true;
     }
@@ -97,25 +97,25 @@ export const rateLimiter = new RateLimiter();
 // Helper function to get client IP from request
 export function getClientIP(request: Request): string {
   // Try to get IP from various headers
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIP = request.headers.get('x-real-ip');
-  const cfConnectingIP = request.headers.get('cf-connecting-ip');
-  
+  const forwarded = request.headers.get("x-forwarded-for");
+  const realIP = request.headers.get("x-real-ip");
+  const cfConnectingIP = request.headers.get("cf-connecting-ip");
+
   if (forwarded) {
     // x-forwarded-for can contain multiple IPs, take the first one
-    return forwarded.split(',')[0].trim();
+    return forwarded.split(",")[0].trim();
   }
-  
+
   if (realIP) {
     return realIP;
   }
-  
+
   if (cfConnectingIP) {
     return cfConnectingIP;
   }
-  
+
   // Fallback to a default IP if we can't determine it
-  return 'unknown';
+  return "unknown";
 }
 
 // Helper function to get user ID from request (for authenticated users)
@@ -130,31 +130,43 @@ export const RATE_LIMITS = {
   SESSION_CREATION: {
     windowMs: 60 * 60 * 1000, // 1 hour
     maxRequests: 10,
-    keyGenerator: (req: Request) => `session:${getClientIP(req)}`
+    keyGenerator: (req: Request) => {
+      const cookie = req.headers.get("cookie") || "";
+      const anon = /(?:^|;\s*)anon_id=([^;]+)/.exec(cookie)?.[1];
+      if (anon) return `session:anon:${anon}`;
+      return `session:${getClientIP(req)}`;
+    },
   },
-  
+
   TOOL_CALLS: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 30,
-    keyGenerator: (req: Request) => `tools:${getClientIP(req)}`
+    keyGenerator: (req: Request) => `tools:${getClientIP(req)}`,
   },
-  
+
   API_REQUESTS: {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 100,
-    keyGenerator: (req: Request) => `api:${getClientIP(req)}`
-  }
+    keyGenerator: (req: Request) => {
+      const cookie = req.headers.get("cookie") || "";
+      const anon = /(?:^|;\s*)anon_id=([^;]+)/.exec(cookie)?.[1];
+      if (anon) return `api:anon:${anon}`;
+      const pseud = /(?:^|;\s*)pseud_id=([^;]+)/.exec(cookie)?.[1];
+      if (pseud) return `api:pseud:${pseud}`;
+      return `api:${getClientIP(req)}`;
+    },
+  },
 } as const;
 
 // Rate limit middleware function
 export function checkRateLimit(
-  request: Request, 
+  request: Request,
   config: RateLimitConfig
 ): { allowed: boolean; remaining: number; resetTime: number } {
   const key = config.keyGenerator(request);
   const allowed = rateLimiter.isAllowed(key, config);
   const remaining = rateLimiter.getRemainingRequests(key, config);
   const resetTime = rateLimiter.getResetTime(key, config);
-  
+
   return { allowed, remaining, resetTime };
 }

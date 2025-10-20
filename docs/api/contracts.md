@@ -24,6 +24,19 @@ npm install @thrivereflections/realtime-contracts
 - **`Events`** - WebRTC data channel event definitions
 - **`RuntimeConfig`** - Runtime configuration and feature flags
 
+### Identity Types
+
+- **`IdentityLevel`** - User identity level (ephemeral, local, anonymous, pseudonymous, authenticated)
+- **`ConsentState`** - User consent status (ACCEPTED, DECLINED, UNKNOWN)
+- **`RetentionPolicy`** - Data retention configuration with max age and size limits
+- **`ClientIdentity`** - Client-side identity information
+- **`SessionIdentity`** - Server-side identity with session context
+
+### Tool Policy Types
+
+- **`ToolPolicy`** - Declarative policy for tool execution requirements
+- **`ToolDefinition`** - Complete tool definition including policy
+
 ### Configuration Types
 
 - **`FeatureFlags`** - Feature flag definitions
@@ -39,6 +52,10 @@ import {
   ToolCall,
   PersistenceStore,
   RuntimeConfig,
+  IdentityLevel,
+  ClientIdentity,
+  ToolPolicy,
+  ToolDefinition,
 } from "@thrivereflections/realtime-contracts";
 
 // Define agent configuration
@@ -62,15 +79,55 @@ const agentConfig: AgentConfig = {
   ],
 };
 
-// Runtime configuration
+// Runtime configuration with identity features
 const runtimeConfig: RuntimeConfig = {
   featureFlags: {
     transport: "webrtc",
     memory: "off",
+    anonymityEphemeralEnabled: true,
+    anonymityLocalEnabled: true,
+    anonymityAnonymousEnabled: true,
+    anonymityPseudonymousEnabled: true,
+    anonymityAuthenticatedEnabled: true,
   },
   sessionLimits: {
     maxDuration: 30 * 60 * 1000, // 30 minutes
     maxToolCalls: 100,
+  },
+  policies: {
+    retention: {
+      ephemeral: { maxAgeMs: 0 },
+      local: { maxAgeMs: 0 },
+      anonymous: { maxAgeMs: 14 * 24 * 60 * 60 * 1000 }, // 14 days
+      pseudonymous: { maxAgeMs: 90 * 24 * 60 * 60 * 1000 }, // 90 days
+      authenticated: { maxAgeMs: 365 * 24 * 60 * 60 * 1000 }, // 1 year
+    },
+  },
+};
+
+// Identity configuration
+const clientIdentity: ClientIdentity = {
+  level: "anonymous",
+  anonymousId: "anon_123456789",
+  consent: "ACCEPTED",
+};
+
+// Tool definition with policy
+const weatherTool: ToolDefinition = {
+  type: "function",
+  name: "get_weather",
+  description: "Get weather information for a location",
+  parameters: {
+    type: "object",
+    properties: {
+      location: { type: "string" },
+    },
+  },
+  policy: {
+    minIdentityLevel: "anonymous",
+    requiresExternalAccess: true,
+    piiHandling: "redact",
+    maxCallsPerSession: 5,
   },
 };
 ```

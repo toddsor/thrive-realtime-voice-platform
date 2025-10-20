@@ -10,6 +10,7 @@ export interface RealtimeDeps {
     info: (message: string, meta?: Record<string, unknown>) => void;
     error: (message: string, meta?: Record<string, unknown>) => void;
   };
+  identity?: unknown;
 }
 
 export function initRealtime(config: RuntimeConfig, deps: RealtimeDeps) {
@@ -25,7 +26,9 @@ export function initRealtime(config: RuntimeConfig, deps: RealtimeDeps) {
       await transport.connect({
         token,
         onEvent: deps.onEvent ?? (() => {}),
-      });
+        // Attach minimal identity context if supported by transport
+        identity: deps.identity,
+      } as unknown as Parameters<typeof transport.connect>[0]);
 
       deps.logger?.info("Realtime connection established", { transport: transport.kind });
     } catch (error) {

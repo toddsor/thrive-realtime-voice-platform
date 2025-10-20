@@ -1,4 +1,4 @@
-import { ToolCall, ToolCallResponse } from "@thrivereflections/realtime-contracts";
+import { ToolCall, ToolCallResponse, ToolDefinition, ToolPolicy } from "@thrivereflections/realtime-contracts";
 import { echoTool, retrieveTool, type Tool } from "@thrivereflections/realtime-tool-gateway";
 import { handleWeatherToolCall, weatherToolDefinition } from "./weatherTool";
 import { handleCalendarToolCall, calendarToolDefinition } from "./weatherTool";
@@ -14,6 +14,7 @@ export interface ToolHandler {
   name: string;
   description: string;
   parameters: Record<string, unknown>;
+  policy: ToolPolicy;
   handler: (toolCall: ToolCall) => Promise<ToolCallResponse>;
 }
 
@@ -39,12 +40,13 @@ export function getToolHandler(name: string): ToolHandler | undefined {
 /**
  * Get all registered tool definitions for OpenAI
  */
-export function getAllToolDefinitions() {
+export function getAllToolDefinitions(): ToolDefinition[] {
   return Array.from(toolRegistry.values()).map((tool) => ({
     type: "function" as const,
     name: tool.name,
     description: tool.description,
     parameters: tool.parameters,
+    policy: tool.policy,
   }));
 }
 
@@ -91,6 +93,11 @@ export function initializeToolRegistry(): void {
       },
       required: ["message"],
     },
+    policy: {
+      minIdentityLevel: "ephemeral",
+      requiresExternalAccess: false,
+      piiHandling: "allow",
+    },
     handler: async (toolCall: ToolCall) => {
       const result = await echoTool(toolCall.args as unknown as { message: string });
       return {
@@ -114,6 +121,12 @@ export function initializeToolRegistry(): void {
       },
       required: ["query"],
     },
+    policy: {
+      minIdentityLevel: "anonymous",
+      requiresExternalAccess: true,
+      piiHandling: "redact",
+      maxCallsPerSession: 10,
+    },
     handler: async (toolCall: ToolCall) => {
       const result = await retrieveTool(toolCall.args as unknown as { query: string });
       return {
@@ -129,6 +142,12 @@ export function initializeToolRegistry(): void {
     name: "get_weather",
     description: weatherToolDefinition.description,
     parameters: weatherToolDefinition.parameters,
+    policy: {
+      minIdentityLevel: "anonymous",
+      requiresExternalAccess: true,
+      piiHandling: "redact",
+      maxCallsPerSession: 5,
+    },
     handler: handleWeatherToolCall,
   });
 
@@ -136,6 +155,12 @@ export function initializeToolRegistry(): void {
     name: "create_calendar_event",
     description: calendarToolDefinition.description,
     parameters: calendarToolDefinition.parameters,
+    policy: {
+      minIdentityLevel: "authenticated",
+      requiresExternalAccess: true,
+      piiHandling: "block",
+      requiresConsent: true,
+    },
     handler: handleCalendarToolCall,
   });
 }
@@ -147,12 +172,14 @@ export function addCustomTool(
   name: string,
   description: string,
   parameters: Record<string, unknown>,
+  policy: ToolPolicy,
   handler: (toolCall: ToolCall) => Promise<ToolCallResponse>
 ): void {
   registerTool({
     name,
     description,
     parameters,
+    policy,
     handler,
   });
 }

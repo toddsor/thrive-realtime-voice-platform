@@ -17,6 +17,8 @@ export class InjectableConsoleLogger implements InjectableLogger {
   private toolCallId?: string;
   private logLevel: LogLevelEnum;
   private config: LoggerConfig;
+  private identityLevel?: "ephemeral" | "local" | "anonymous" | "pseudonymous" | "authenticated";
+  private identityId?: string;
 
   constructor(correlationId?: string, config?: LoggerConfig) {
     this.correlationId = correlationId;
@@ -46,6 +48,11 @@ export class InjectableConsoleLogger implements InjectableLogger {
     this.toolCallId = toolCallId;
   }
 
+  setIdentity(level?: "ephemeral" | "local" | "anonymous" | "pseudonymous" | "authenticated", id?: string): void {
+    this.identityLevel = level;
+    this.identityId = id;
+  }
+
   logLatencyMark(mark: string, timestamp: number): void {
     this.debug(`Latency mark: ${mark}`, { mark, timestamp });
   }
@@ -59,6 +66,8 @@ export class InjectableConsoleLogger implements InjectableLogger {
       clientSessionId: this.clientSessionId,
       openaiSessionId: this.openaiSessionId,
       toolCallId: this.toolCallId,
+      identityLevel: this.identityLevel,
+      identityId: this.identityId,
       metadata: {
         ...meta,
         environment: this.config.environment || "development",

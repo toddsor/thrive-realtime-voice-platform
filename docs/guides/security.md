@@ -129,6 +129,151 @@ export const DEFAULT_CONTENT_SAFETY_RULES: ContentSafetyConfig = {
 };
 ```
 
+## Levels of Anonymity
+
+### Overview
+
+The Thrive Realtime Voice Platform implements a comprehensive 5-level anonymity system that provides users with granular control over their data privacy:
+
+- **Ephemeral** - No data stored anywhere, in-memory processing only
+- **Local** - Data stored only in browser's local storage
+- **Anonymous** - Temporary server storage with anonymous ID, 14-day retention
+- **Pseudonymous** - Persistent profile with chosen nickname, 90-day retention
+- **Authenticated** - Full account access with permanent storage
+
+### Data Handling by Level
+
+```typescript
+const ANONYMITY_LEVELS = {
+  ephemeral: {
+    storage: "none",
+    retention: "immediate",
+    piiHandling: "block",
+    externalAccess: false,
+    description: "No data stored anywhere",
+  },
+  local: {
+    storage: "browser",
+    retention: "until cleared",
+    piiHandling: "allow",
+    externalAccess: false,
+    description: "Stored in browser only",
+  },
+  anonymous: {
+    storage: "server",
+    retention: "14 days",
+    piiHandling: "redact",
+    externalAccess: true,
+    description: "Temporary server storage",
+  },
+  pseudonymous: {
+    storage: "server",
+    retention: "90 days",
+    piiHandling: "redact",
+    externalAccess: true,
+    description: "Persistent profile with nickname",
+  },
+  authenticated: {
+    storage: "server",
+    retention: "permanent",
+    piiHandling: "allow",
+    externalAccess: true,
+    description: "Full account access",
+  },
+};
+```
+
+### Identity-Aware PII Handling
+
+The platform automatically adjusts PII handling based on the user's identity level:
+
+```typescript
+// Tool policy example showing identity-aware PII handling
+const weatherToolPolicy: ToolPolicy = {
+  minIdentityLevel: "anonymous",
+  requiresExternalAccess: true,
+  piiHandling: "redact", // Redacts PII for anonymous/pseudonymous users
+  maxCallsPerSession: 5,
+};
+
+// Calendar tool requires authenticated users and blocks PII
+const calendarToolPolicy: ToolPolicy = {
+  minIdentityLevel: "authenticated",
+  requiresExternalAccess: true,
+  piiHandling: "block", // Blocks execution if PII detected
+  requiresConsent: true,
+};
+```
+
+### Tool Policies
+
+The platform uses a declarative policy system where each tool declares its own requirements:
+
+```typescript
+interface ToolPolicy {
+  minIdentityLevel: IdentityLevel;
+  allowedLevels?: IdentityLevel[];
+  requiresExternalAccess: boolean;
+  piiHandling: "block" | "redact" | "allow";
+  maxCallsPerSession?: number;
+  requiresConsent?: boolean;
+}
+
+// Example tool registrations with policies
+registerTool({
+  name: "echo",
+  description: "Echo back the input message",
+  policy: {
+    minIdentityLevel: "ephemeral",
+    requiresExternalAccess: false,
+    piiHandling: "allow",
+  },
+  handler: echoHandler,
+});
+
+registerTool({
+  name: "retrieve_docs",
+  description: "Retrieve relevant documentation",
+  policy: {
+    minIdentityLevel: "anonymous",
+    requiresExternalAccess: true,
+    piiHandling: "redact",
+    maxCallsPerSession: 10,
+  },
+  handler: retrieveHandler,
+});
+```
+
+### Identity-Aware Rate Limiting
+
+Rate limiting is enhanced to work with different identity levels:
+
+```typescript
+export const RATE_LIMITS = {
+  SESSION_CREATION: {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: 10,
+    keyGenerator: (req: Request) => {
+      const anon = req.cookies.get("anon_id")?.value;
+      if (anon) return `session:anon:${anon}`;
+      return `session:${getClientIP(req)}`;
+    },
+  },
+
+  TOOL_CALLS: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 30,
+    keyGenerator: (req: Request) => {
+      const anon = req.cookies.get("anon_id")?.value;
+      const pseud = req.cookies.get("pseud_id")?.value;
+      if (pseud) return `tools:pseud:${pseud}`;
+      if (anon) return `tools:anon:${anon}`;
+      return `tools:${getClientIP(req)}`;
+    },
+  },
+};
+```
+
 ## PII Redaction
 
 ### Automatic PII Detection

@@ -1,4 +1,4 @@
-import { Transport } from "@thrivereflections/realtime-contracts";
+import { Transport, ClientIdentity } from "@thrivereflections/realtime-contracts";
 
 export interface WebRTCTransportConfig {
   voice?: string;
@@ -17,7 +17,11 @@ export interface WebRTCTransportConfig {
 }
 
 export interface WebRTCTransportDeps {
-  getSessionToken: () => Promise<{ client_secret: { value: string; expires_at: string }; session_id: string; model: string }>;
+  getSessionToken: () => Promise<{
+    client_secret: { value: string; expires_at: string };
+    session_id: string;
+    model: string;
+  }>;
 }
 
 export function createWebRTCTransport(config: WebRTCTransportConfig, deps: WebRTCTransportDeps): Transport {
@@ -33,7 +37,7 @@ export function createWebRTCTransport(config: WebRTCTransportConfig, deps: WebRT
   return {
     kind: "webrtc",
 
-    async connect(opts: { token: string; onEvent: (event: unknown) => void }) {
+    async connect(opts: { token: string; onEvent: (event: unknown) => void; identity?: ClientIdentity }) {
       try {
         console.log("🚀 Starting pure WebRTC connection...");
         eventHandler = opts.onEvent;
@@ -44,7 +48,11 @@ export function createWebRTCTransport(config: WebRTCTransportConfig, deps: WebRT
         clientSecretValue = sessionData.client_secret.value;
         sessionId = sessionData.session_id;
         model = sessionData.model;
-        console.log("✅ Ephemeral secret received", { session_id: sessionId, model, expires_at: sessionData.client_secret.expires_at });
+        console.log("✅ Ephemeral secret received", {
+          session_id: sessionId,
+          model,
+          expires_at: sessionData.client_secret.expires_at,
+        });
 
         // 2. Create RTCPeerConnection with ICE servers
         console.log("🔗 Creating RTCPeerConnection...");
@@ -66,10 +74,23 @@ export function createWebRTCTransport(config: WebRTCTransportConfig, deps: WebRT
 
           if (sessionId && eventHandler) {
             console.log("🎉 Data channel opened, triggering session created event:", sessionId);
-            eventHandler({
+            const sessionEvent: any = {
               type: "session.created",
               session: { id: sessionId },
-            });
+            };
+
+            // Add identity metadata (non-PII only)
+            if (opts.identity) {
+              sessionEvent.session.metadata = {
+                identityLevel: opts.identity.level,
+                // Only include non-PII identifiers
+                ...(opts.identity.anonymousId && { anonymousId: opts.identity.anonymousId }),
+                ...(opts.identity.pseudonymousId && { pseudonymousId: opts.identity.pseudonymousId }),
+                ...(opts.identity.consent && { consent: opts.identity.consent }),
+              };
+            }
+
+            eventHandler(sessionEvent);
             console.log("🎉 Session created event sent from onopen");
           }
         };
@@ -86,10 +107,23 @@ export function createWebRTCTransport(config: WebRTCTransportConfig, deps: WebRT
             newDataChannel.onopen = () => {
               console.log("✅ DataChannel reconnected");
               if (sessionId && eventHandler) {
-                eventHandler({
+                const sessionEvent: any = {
                   type: "session.created",
                   session: { id: sessionId },
-                });
+                };
+
+                // Add identity metadata (non-PII only)
+                if (opts.identity) {
+                  sessionEvent.session.metadata = {
+                    identityLevel: opts.identity.level,
+                    // Only include non-PII identifiers
+                    ...(opts.identity.anonymousId && { anonymousId: opts.identity.anonymousId }),
+                    ...(opts.identity.pseudonymousId && { pseudonymousId: opts.identity.pseudonymousId }),
+                    ...(opts.identity.consent && { consent: opts.identity.consent }),
+                  };
+                }
+
+                eventHandler(sessionEvent);
               }
             };
 
@@ -218,10 +252,23 @@ export function createWebRTCTransport(config: WebRTCTransportConfig, deps: WebRT
 
             if (sessionId && eventHandler) {
               console.log("🎉 ICE connected, triggering session created event:", sessionId);
-              eventHandler({
+              const sessionEvent: any = {
                 type: "session.created",
                 session: { id: sessionId },
-              });
+              };
+
+              // Add identity metadata (non-PII only)
+              if (opts.identity) {
+                sessionEvent.session.metadata = {
+                  identityLevel: opts.identity.level,
+                  // Only include non-PII identifiers
+                  ...(opts.identity.anonymousId && { anonymousId: opts.identity.anonymousId }),
+                  ...(opts.identity.pseudonymousId && { pseudonymousId: opts.identity.pseudonymousId }),
+                  ...(opts.identity.consent && { consent: opts.identity.consent }),
+                };
+              }
+
+              eventHandler(sessionEvent);
               console.log("🎉 Session created event sent from ICE connection");
             }
           } else if (

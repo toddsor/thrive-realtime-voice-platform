@@ -6,9 +6,10 @@ A comprehensive guide for building applications with the Thrive Realtime Voice P
 
 1. [Understanding the Architecture](#understanding-the-architecture)
 2. [Building Your First App](#building-your-first-app)
-3. [Common Patterns](#common-patterns)
-4. [Production Considerations](#production-considerations)
-5. [API Routes](#api-routes)
+3. [Identity Management](#identity-management)
+4. [Common Patterns](#common-patterns)
+5. [Production Considerations](#production-considerations)
+6. [API Routes](#api-routes)
 
 ## Understanding the Architecture
 
@@ -31,11 +32,11 @@ The Thrive Realtime Voice Platform is organized into focused packages with clear
 
 - **`@thrivereflections/realtime-auth-supabase`** - Authentication
 - **`@thrivereflections/realtime-store-prisma`** - Database persistence
-- **`@thrivereflections/realtime-tool-gateway`** - Tool execution and RAG
+- **`@thrivereflections/realtime-tool-gateway`** - Tool execution and RAG with policy enforcement
 - **`@thrivereflections/realtime-usage`** - Cost tracking and analytics
-- **`@thrivereflections/realtime-security`** - Security and content safety
+- **`@thrivereflections/realtime-security`** - Security, PII redaction, and content safety
 - **`@thrivereflections/realtime-sre`** - Monitoring and alerting
-- **`@thrivereflections/realtime-observability`** - Logging and metrics
+- **`@thrivereflections/realtime-observability`** - Identity-aware logging and metrics
 
 ### Package Relationships
 
@@ -270,6 +271,236 @@ const realtime = initRealtime(config, {
 
 await realtime.start();
 ```
+
+## Identity Management
+
+The platform supports a 5-level anonymity system that provides users with granular control over their data privacy. Understanding identity management is crucial for building privacy-compliant applications.
+
+### Identity Levels
+
+The platform supports five identity levels with different privacy guarantees:
+
+- **Ephemeral** - No data stored, in-memory processing only
+- **Local** - Browser-only storage, no server data
+- **Anonymous** - Temporary server storage with anonymous ID (14 days)
+- **Pseudonymous** - Persistent profile with chosen nickname (90 days)
+- **Authenticated** - Full account access with permanent storage
+
+### Setting Up Identity Management
+
+```typescript
+// lib/identity.ts
+import { identityStore } from "@/lib/stores/identityStore";
+import { useIdentity } from "@/lib/hooks/useIdentity";
+
+// Initialize identity store
+const identity = identityStore.getIdentity();
+console.log("Current identity level:", identity.level);
+
+// In React components
+function IdentityComponent() {
+  const { level, isLoading, upgradeToAnonymous, upgradeToPseudonymous, getUpgradeOptions } = useIdentity();
+
+  const handleUpgrade = async () => {
+    if (level === "ephemeral") {
+      await upgradeToAnonymous();
+    } else if (level === "anonymous") {
+      await upgradeToPseudonymous("my-nickname");
+    }
+  };
+
+  return (
+    <div>
+      <p>Current level: {level}</p>
+      <button onClick={handleUpgrade} disabled={isLoading}>
+        Upgrade Identity
+      </button>
+    </div>
+  );
+}
+```
+
+### Identity-Aware Tool Execution
+
+Tools can be configured with policies that require specific identity levels:
+
+```typescript
+// lib/tools/weatherTool.ts
+import { registerTool } from "@/lib/tools/registry";
+
+registerTool({
+  name: "get_weather",
+  description: "Get weather information for a location",
+  parameters: {
+    type: "object",
+    properties: {
+      location: { type: "string" },
+    },
+  },
+  policy: {
+    minIdentityLevel: "anonymous", // Requires anonymous or higher
+    requiresExternalAccess: true,
+    piiHandling: "redact", // Redact PII for anonymous users
+    maxCallsPerSession: 5,
+  },
+  handler: async (toolCall) => {
+    // Tool implementation
+    return { weather: "sunny", temperature: 72 };
+  },
+});
+```
+
+### PII Handling by Identity Level
+
+The platform automatically handles PII based on the user's identity level:
+
+```typescript
+// lib/security/piiHandling.ts
+import { redactPII } from "@thrivereflections/realtime-security";
+
+export function handleUserInput(text: string, identityLevel: string): string {
+  switch (identityLevel) {
+    case "ephemeral":
+    case "local":
+      return text; // Allow PII in local storage
+    case "anonymous":
+    case "pseudonymous":
+      return redactPII(text); // Redact PII before server storage
+    case "authenticated":
+      return text; // Allow PII with user consent
+    default:
+      return redactPII(text); // Default to redaction
+  }
+}
+```
+
+### Identity-Aware Logging
+
+Logs automatically include identity context for audit trails:
+
+```typescript
+// lib/logging/identityLogger.ts
+import { createLoggerFromEnv } from "@thrivereflections/realtime-observability";
+import { identityStore } from "@/lib/stores/identityStore";
+
+export function createIdentityLogger(correlationId: string) {
+  const logger = createLoggerFromEnv(correlationId);
+  const identity = identityStore.getIdentity();
+
+  // Set identity context
+  logger.setIdentity(identity.level, identity.anonymousId || identity.pseudonymousId || identity.userId);
+
+  return logger;
+}
+
+// Usage
+const logger = createIdentityLogger("corr-123");
+logger.info("User action completed", { action: "tool_execution" });
+// Logs include: { identityLevel: "anonymous", identityId: "anon_123456789", ... }
+```
+
+### API Routes with Identity
+
+API routes can access identity information from cookies and headers:
+
+```typescript
+// app/api/entries/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+
+export async function POST(request: NextRequest) {
+  const { text } = await request.json();
+
+  // Get identity from cookies/headers
+  const anonymousId = cookies().get("anon_id")?.value;
+  const pseudonymId = cookies().get("pseud_id")?.value;
+  const userId = request.headers.get("x-user-id");
+
+  let identityLevel = "ephemeral";
+  let identityId: string | undefined;
+
+  if (userId) {
+    identityLevel = "authenticated";
+    identityId = userId;
+  } else if (pseudonymId) {
+    identityLevel = "pseudonymous";
+    identityId = pseudonymId;
+  } else if (anonymousId) {
+    identityLevel = "anonymous";
+    identityId = anonymousId;
+  }
+
+  // Handle PII based on identity level
+  const processedText = handleUserInput(text, identityLevel);
+
+  // Store entry with identity context
+  const entry = await entryStore.addEntry(identityLevel, identityId, processedText);
+
+  return NextResponse.json({ entry });
+}
+```
+
+### UI Components for Identity Management
+
+The platform provides pre-built UI components for identity management:
+
+```typescript
+// components/IdentityManagement.tsx
+import { IdentityBadge, UpgradePrompt, RetentionInfo } from "@/components/identity";
+
+export function IdentityManagement() {
+  return (
+    <div className="space-y-4">
+      {/* Show current identity level */}
+      <IdentityBadge />
+
+      {/* Allow users to upgrade */}
+      <UpgradePrompt
+        trigger={<button>Upgrade Identity</button>}
+        onUpgrade={(level) => console.log(`Upgraded to ${level}`)}
+      />
+
+      {/* Show data retention information */}
+      <RetentionInfo />
+    </div>
+  );
+}
+```
+
+### Configuration for Identity Features
+
+Enable identity features through configuration:
+
+```typescript
+// lib/config/identityConfig.ts
+export const identityConfig = {
+  featureFlags: {
+    anonymityEphemeralEnabled: true,
+    anonymityLocalEnabled: true,
+    anonymityAnonymousEnabled: true,
+    anonymityPseudonymousEnabled: true,
+    anonymityAuthenticatedEnabled: true,
+  },
+  retention: {
+    ephemeral: { maxAgeMs: 0 },
+    local: { maxAgeMs: 0 },
+    anonymous: { maxAgeMs: 14 * 24 * 60 * 60 * 1000 }, // 14 days
+    pseudonymous: { maxAgeMs: 90 * 24 * 60 * 60 * 1000 }, // 90 days
+    authenticated: { maxAgeMs: 365 * 24 * 60 * 60 * 1000 }, // 1 year
+  },
+};
+```
+
+### Best Practices
+
+1. **Start with Ephemeral**: Begin with the most private level and upgrade as needed
+2. **Respect User Choice**: Always allow users to choose their privacy level
+3. **Clear Communication**: Explain what data is stored at each level
+4. **Consent Management**: Require explicit consent for data storage
+5. **Audit Trails**: Log all identity-related actions for compliance
+6. **Data Minimization**: Only store what's necessary for the chosen level
+
+For more detailed information, see the [Levels of Anonymity Guide](./anonymity-levels.md).
 
 ## Common Patterns
 

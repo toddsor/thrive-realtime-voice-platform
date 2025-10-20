@@ -279,6 +279,298 @@ interface SupabaseClientFactory {
 - **Token Refresh** - Automatic token refresh
 - **Session Validation** - Database-verified sessions
 
+## Identity Levels and Authentication
+
+The platform supports multiple identity levels that provide different privacy guarantees and data handling:
+
+### Identity Levels
+
+- **Ephemeral** - No authentication, no data storage
+- **Local** - Browser-only storage, no server data
+- **Anonymous** - Temporary server storage with anonymous ID
+- **Pseudonymous** - Persistent profile with chosen nickname
+- **Authenticated** - Full account access with permanent storage
+
+### Upgrade Paths
+
+Users can upgrade between identity levels with appropriate consent:
+
+```typescript
+// Ephemeral → Anonymous
+const { anonymousId } = await fetch("/api/session/anonymous", {
+  method: "POST",
+  body: JSON.stringify({ level: "anonymous" }),
+});
+
+// Anonymous → Pseudonymous
+const { pseudonymId } = await fetch("/api/pseudonym", {
+  method: "POST",
+  body: JSON.stringify({ pseudonym: "chosen-nickname" }),
+});
+
+// Pseudonymous → Authenticated
+const { success } = await fetch("/api/pseudonym/link", {
+  method: "POST",
+  body: JSON.stringify({ userId: "user-123" }),
+});
+```
+
+## API Endpoints for Identity Management
+
+### Anonymous Session Management
+
+#### `POST /api/session/anonymous`
+
+Creates an anonymous session with temporary server storage.
+
+**Request:**
+
+```json
+{
+  "level": "anonymous"
+}
+```
+
+**Response:**
+
+```json
+{
+  "anonymousId": "anon_123456789",
+  "level": "anonymous"
+}
+```
+
+**Cookies Set:**
+
+- `anon_id` - Anonymous identifier (7 days)
+
+### Entry Management
+
+#### `GET /api/entries`
+
+Retrieves entries for the current identity level.
+
+**Response:**
+
+```json
+{
+  "entries": [
+    {
+      "id": "entry_123",
+      "text": "User input text",
+      "identityLevel": "anonymous",
+      "identityId": "anon_123456789",
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+#### `POST /api/entries`
+
+Creates a new entry with PII redaction based on identity level.
+
+**Request:**
+
+```json
+{
+  "text": "User input with potential PII"
+}
+```
+
+**Response:**
+
+```json
+{
+  "entry": {
+    "id": "entry_123",
+    "text": "User input with [EMAIL_REDACTED]",
+    "identityLevel": "anonymous",
+    "identityId": "anon_123456789",
+    "createdAt": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+### Pseudonymous Identity Management
+
+#### `POST /api/pseudonym`
+
+Creates a pseudonymous identity with chosen nickname.
+
+**Request:**
+
+```json
+{
+  "pseudonym": "chosen-nickname"
+}
+```
+
+**Response:**
+
+```json
+{
+  "pseudonymId": "pseud_123456789",
+  "pseudonym": "chosen-nickname"
+}
+```
+
+**Cookies Set:**
+
+- `pseud_id` - Pseudonymous identifier (30 days)
+
+#### `POST /api/pseudonym/link`
+
+Links a pseudonymous identity to an authenticated user.
+
+**Request:**
+
+```json
+{
+  "userId": "user_123456789"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "pseudonymId": "pseud_123456789",
+  "userId": "user_123456789"
+}
+```
+
+## Frontend Integration
+
+### Using the Identity Hook
+
+```typescript
+import { useIdentity } from "@/lib/hooks/useIdentity";
+
+function MyComponent() {
+  const { level, isLoading, upgradeToAnonymous, upgradeToPseudonymous, getUpgradeOptions } = useIdentity();
+
+  const handleUpgrade = async () => {
+    if (level === "ephemeral") {
+      await upgradeToAnonymous();
+    } else if (level === "anonymous") {
+      await upgradeToPseudonymous("my-nickname");
+    }
+  };
+
+  return (
+    <div>
+      <p>Current level: {level}</p>
+      <button onClick={handleUpgrade}>Upgrade Identity</button>
+    </div>
+  );
+}
+```
+
+### Identity Store
+
+```typescript
+import { identityStore } from "@/lib/stores/identityStore";
+
+// Get current identity
+const identity = identityStore.getIdentity();
+
+// Subscribe to changes
+const unsubscribe = identityStore.subscribe((state) => {
+  console.log("Identity changed:", state);
+});
+
+// Upgrade to anonymous
+await identityStore.upgradeToAnonymous();
+
+// Upgrade to pseudonymous
+await identityStore.upgradeToPseudonymous("nickname");
+```
+
+### UI Components
+
+```typescript
+import { IdentityBadge, UpgradePrompt, RetentionInfo } from "@/components/identity";
+
+function Header() {
+  return (
+    <div className="flex items-center gap-4">
+      <IdentityBadge />
+      <UpgradePrompt />
+    </div>
+  );
+}
+
+function Settings() {
+  return (
+    <div>
+      <RetentionInfo />
+      <UpgradePrompt trigger={<button>Upgrade Now</button>} onUpgrade={(level) => console.log("Upgraded to:", level)} />
+    </div>
+  );
+}
+```
+
+## Code Examples
+
+### Creating Anonymous Sessions
+
+```typescript
+// Server-side API route
+export async function POST(request: NextRequest) {
+  const { level } = await request.json();
+
+  let anonymousId = cookies().get("anon_id")?.value;
+  if (!anonymousId) {
+    anonymousId = crypto.randomUUID();
+    cookies().set("anon_id", anonymousId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+  }
+
+  return NextResponse.json({ anonymousId, level });
+}
+```
+
+### Managing Entries with Identity
+
+```typescript
+// Add entry with PII redaction
+export async function POST(request: NextRequest) {
+  const { text } = await request.json();
+  const anonymousId = cookies().get("anon_id")?.value;
+  const pseudonymId = cookies().get("pseud_id")?.value;
+  const userId = request.headers.get("x-user-id");
+
+  let identityId: string | undefined;
+  let identityLevel: IdentityLevel = "ephemeral";
+
+  if (userId) {
+    identityId = userId;
+    identityLevel = "authenticated";
+  } else if (pseudonymId) {
+    identityId = pseudonymId;
+    identityLevel = "pseudonymous";
+  } else if (anonymousId) {
+    identityId = anonymousId;
+    identityLevel = "anonymous";
+  }
+
+  // Redact PII based on identity level
+  let processedText = text;
+  if (identityLevel === "ephemeral" || identityLevel === "local" || identityLevel === "anonymous") {
+    processedText = redactPII(text);
+  }
+
+  const entry = await entryStore.addEntry(identityLevel, identityId, processedText);
+  return NextResponse.json({ entry });
+}
+```
+
 ### Next.js Integration
 
 - **Browser Client** - Client-side Supabase client

@@ -6,9 +6,10 @@ Core runtime logic for the Thrive Realtime Voice Platform.
 
 This package contains the core runtime logic for real-time voice communication, including:
 
-- Realtime connection initialization
+- Realtime connection initialization with identity support
 - Transport factory for creating WebRTC/WebSocket connections
-- Event router for handling OpenAI Realtime API events
+- Event router for handling OpenAI Realtime API events with PII redaction
+- Identity-aware event processing and logging
 - Type definitions for events, transcripts, and tool calls
 
 ## Installation
@@ -23,11 +24,24 @@ pnpm add @thrivereflections/realtime-core
 
 ```typescript
 import { initRealtime, createTransport } from "@thrivereflections/realtime-core";
+import { ClientIdentity } from "@thrivereflections/realtime-contracts";
 
 const config = {
   featureFlags: {
     transport: "webrtc" as const,
+    anonymityAnonymousEnabled: true,
   },
+  policies: {
+    retention: {
+      anonymous: { maxAgeMs: 14 * 24 * 60 * 60 * 1000 }, // 14 days
+    },
+  },
+};
+
+const identity: ClientIdentity = {
+  level: "anonymous",
+  anonymousId: "anon_123456789",
+  consent: "ACCEPTED",
 };
 
 const deps = {
@@ -35,6 +49,7 @@ const deps = {
   transportFactory: createTransport,
   onEvent: (event) => console.log("Event:", event),
   logger: yourLogger,
+  identity, // Pass identity for transport metadata
 };
 
 const realtime = initRealtime(config, deps);
@@ -60,12 +75,21 @@ router.routeEvent(event);
 
 ### `initRealtime(config, deps)`
 
-Initializes a realtime connection with dependency injection.
+Initializes a realtime connection with dependency injection and identity support.
 
 **Parameters:**
 
-- `config`: Runtime configuration object
-- `deps`: Dependencies object with required methods
+- `config`: Runtime configuration object with identity feature flags and retention policies
+- `deps`: Dependencies object with required methods and optional identity
+
+**Dependencies:**
+
+- `getToken()`: Function to get authentication token
+- `transportFactory?`: Optional transport factory function
+- `baseUrl?`: Optional base URL for connections
+- `onEvent?`: Optional event handler function
+- `logger?`: Optional logger with info/error methods
+- `identity?`: Optional client identity for transport metadata
 
 **Returns:** Object with `start()`, `stop()`, `transport`, and `config` properties
 

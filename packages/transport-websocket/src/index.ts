@@ -1,4 +1,4 @@
-import { Transport } from "@thrivereflections/realtime-contracts";
+import { Transport, ClientIdentity } from "@thrivereflections/realtime-contracts";
 
 export interface WebSocketTransportConfig {
   voice?: string;
@@ -17,7 +17,11 @@ export interface WebSocketTransportConfig {
 }
 
 export interface WebSocketTransportDeps {
-  getSessionToken: () => Promise<{ client_secret: { value: string; expires_at: string }; session_id: string; model: string }>;
+  getSessionToken: () => Promise<{
+    client_secret: { value: string; expires_at: string };
+    session_id: string;
+    model: string;
+  }>;
 }
 
 // Audio conversion utilities
@@ -71,7 +75,7 @@ export function createWebSocketTransport(config: WebSocketTransportConfig, deps:
   return {
     kind: "websocket",
 
-    async connect(opts: { token: string; onEvent: (event: unknown) => void }) {
+    async connect(opts: { token: string; onEvent: (event: unknown) => void; identity?: ClientIdentity }) {
       try {
         console.log("🚀 Starting WebSocket connection...");
         eventHandler = opts.onEvent;
@@ -82,7 +86,11 @@ export function createWebSocketTransport(config: WebSocketTransportConfig, deps:
         clientSecretValue = sessionData.client_secret.value;
         sessionId = sessionData.session_id;
         model = sessionData.model;
-        console.log("✅ Ephemeral secret received", { session_id: sessionId, model, expires_at: sessionData.client_secret.expires_at });
+        console.log("✅ Ephemeral secret received", {
+          session_id: sessionId,
+          model,
+          expires_at: sessionData.client_secret.expires_at,
+        });
 
         // 2. Create WebSocket connection
         console.log("🔗 Creating WebSocket connection...");
@@ -94,26 +102,39 @@ export function createWebSocketTransport(config: WebSocketTransportConfig, deps:
           isConnected = true;
 
           // Send authentication
+          const sessionConfig: any = {
+            modalities: ["text", "audio"],
+            instructions: config.instructions || "You are a helpful AI assistant.",
+            voice: config.voice || "alloy",
+            input_audio_format: "pcm16",
+            output_audio_format: "pcm16",
+            input_audio_transcription: {
+              model: "whisper-1",
+            },
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 200,
+            },
+            tools: config.tools || [],
+          };
+
+          // Add identity metadata (non-PII only)
+          if (opts.identity) {
+            sessionConfig.metadata = {
+              identityLevel: opts.identity.level,
+              // Only include non-PII identifiers
+              ...(opts.identity.anonymousId && { anonymousId: opts.identity.anonymousId }),
+              ...(opts.identity.pseudonymousId && { pseudonymousId: opts.identity.pseudonymousId }),
+              ...(opts.identity.consent && { consent: opts.identity.consent }),
+            };
+          }
+
           websocket!.send(
             JSON.stringify({
               type: "session.update",
-              session: {
-                modalities: ["text", "audio"],
-                instructions: config.instructions || "You are a helpful AI assistant.",
-                voice: config.voice || "alloy",
-                input_audio_format: "pcm16",
-                output_audio_format: "pcm16",
-                input_audio_transcription: {
-                  model: "whisper-1",
-                },
-                turn_detection: {
-                  type: "server_vad",
-                  threshold: 0.5,
-                  prefix_padding_ms: 300,
-                  silence_duration_ms: 200,
-                },
-                tools: config.tools || [],
-              },
+              session: sessionConfig,
             })
           );
 

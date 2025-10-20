@@ -93,6 +93,47 @@ export class FeatureFlagManager {
       enabled: true,
     });
 
+    // Anonymity levels enablement
+    this.setFlag({
+      name: "anonymity_ephemeral_enabled",
+      description: "Enable Ephemeral (no tracking) mode",
+      value: true,
+      type: "boolean",
+      enabled: true,
+    });
+
+    this.setFlag({
+      name: "anonymity_local_enabled",
+      description: "Enable Local-only storage mode",
+      value: true,
+      type: "boolean",
+      enabled: true,
+    });
+
+    this.setFlag({
+      name: "anonymity_anonymous_enabled",
+      description: "Enable Anonymous Session mode",
+      value: true,
+      type: "boolean",
+      enabled: true,
+    });
+
+    this.setFlag({
+      name: "anonymity_pseudonymous_enabled",
+      description: "Enable Pseudonymous mode",
+      value: true,
+      type: "boolean",
+      enabled: true,
+    });
+
+    this.setFlag({
+      name: "anonymity_authenticated_enabled",
+      description: "Enable Authenticated mode",
+      value: true,
+      type: "boolean",
+      enabled: true,
+    });
+
     // Gradual rollout flags
     this.setFlag({
       name: "usage_stats_ui",
@@ -144,6 +185,29 @@ export class FeatureFlagManager {
       name: "max_session_duration_minutes",
       description: "Maximum session duration in minutes",
       value: 10,
+      type: "number",
+      enabled: true,
+    });
+
+    // Retention defaults (days)
+    this.setFlag({
+      name: "retention_anonymous_days",
+      description: "Retention window (days) for anonymous session entries",
+      value: 14,
+      type: "number",
+      enabled: true,
+    });
+    this.setFlag({
+      name: "retention_pseudonymous_days",
+      description: "Retention window (days) for pseudonymous entries",
+      value: 90,
+      type: "number",
+      enabled: true,
+    });
+    this.setFlag({
+      name: "retention_authenticated_days",
+      description: "Retention window (days) for authenticated entries",
+      value: 365,
       type: "number",
       enabled: true,
     });

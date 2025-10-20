@@ -94,10 +94,16 @@ export class RealtimeEventRouter {
    * Route an incoming event to the appropriate handler
    */
   routeEvent(event: RealtimeEvent): void {
-    // Log all events with their data (excluding audio)
+    // Log all events with their data (excluding audio and potential PII fields)
     const logData = { ...event };
     if (logData.audio) {
       logData.audio = "[AUDIO_DATA_REMOVED_FOR_LOGGING]";
+    }
+    if ((logData as any).transcript) {
+      (logData as any).transcript = "[REDACTED]";
+    }
+    if ((logData as any).text) {
+      (logData as any).text = "[REDACTED]";
     }
     console.log("🔄 Routing event:", event.type, logData);
 

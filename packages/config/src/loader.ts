@@ -25,6 +25,11 @@ export function loadRuntimeConfig(): RuntimeConfig {
     captions: process.env.FEATURE_CAPTIONS !== "false",
     tools: process.env.FEATURE_TOOLS !== "false",
     memory: (process.env.FEATURE_MEMORY as "off" | "short" | "long") ?? "off",
+    anonymityEphemeralEnabled: process.env.FEATURE_ANONYMITY_EPHEMERAL !== "false",
+    anonymityLocalEnabled: process.env.FEATURE_ANONYMITY_LOCAL !== "false",
+    anonymityAnonymousEnabled: process.env.FEATURE_ANONYMITY_ANONYMOUS !== "false",
+    anonymityPseudonymousEnabled: process.env.FEATURE_ANONYMITY_PSEUDONYMOUS !== "false",
+    anonymityAuthenticatedEnabled: process.env.FEATURE_ANONYMITY_AUTHENTICATED !== "false",
   };
 
   const policies: PolicyConfig = {
@@ -40,6 +45,13 @@ export function loadRuntimeConfig(): RuntimeConfig {
         max: Number(process.env.RATE_LIMIT_TOOLS_MAX ?? 20),
         window: Number(process.env.RATE_LIMIT_TOOLS_WINDOW ?? 60000),
       },
+    },
+    retention: {
+      ephemeral: { maxAgeMs: Number(process.env.RETENTION_EPHEMERAL_MAX_AGE_MS ?? 0) },
+      local: { maxAgeMs: Number(process.env.RETENTION_LOCAL_MAX_AGE_MS ?? 0) },
+      anonymous: { maxAgeMs: Number(process.env.RETENTION_ANONYMOUS_MAX_AGE_MS ?? 14 * 24 * 60 * 60 * 1000) },
+      pseudonymous: { maxAgeMs: Number(process.env.RETENTION_PSEUDONYMOUS_MAX_AGE_MS ?? 90 * 24 * 60 * 60 * 1000) },
+      authenticated: { maxAgeMs: Number(process.env.RETENTION_AUTHENTICATED_MAX_AGE_MS ?? 365 * 24 * 60 * 60 * 1000) },
     },
   };
 
