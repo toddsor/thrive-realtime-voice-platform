@@ -12,23 +12,25 @@ import { Separator } from "@/components/ui/separator";
 import { useRealtimeVoice } from "@/lib/demo";
 import { getAgentConfigForContext, validateAgentConfig } from "@/lib/platform";
 import { Mic, MicOff, Phone, PhoneOff, TestTube, Copy, Download, History, Settings, LogOut, User } from "lucide-react";
-import { PrivacyWarningDialog } from "@/components/ui/privacy-warning-dialog";
 import { CostDisplay } from "@/components/ui/cost-display";
 import { LiveCostTracker } from "@/components/ui/live-cost-tracker";
+import { IdentityBadge, UpgradePrompt, RetentionInfo } from "@/components/identity";
+import { useIdentity } from "@/lib/hooks/useIdentity";
+import { identityStore } from "@/lib/stores/identityStore";
 import { createClient } from "@/lib/supabase/client";
 import { SupabaseAuthProvider, createAuthProvider, AuthProvider } from "@thrivereflections/realtime-auth-supabase";
 import { InjectableConsoleLogger } from "@thrivereflections/realtime-observability";
+import { IdentityLevel } from "@thrivereflections/realtime-contracts";
 
 export default function VoicePage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isTestingTool, setIsTestingTool] = useState(false);
-  const [memoryEnabled, setMemoryEnabled] = useState(false);
-  const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
   const [user, setUser] = useState<{ sub: string; email?: string; name?: string; provider?: string } | null>(null);
   const [authProvider, setAuthProvider] = useState<AuthProvider | null>(null);
   const [runtimeConfig, setRuntimeConfig] = useState<any>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { level: identityLevel, getUpgradeOptions } = useIdentity();
   const {
     connectionStatus,
     isRecording,
@@ -106,7 +108,7 @@ export default function VoicePage() {
           transport: "webrtc" as const,
           bargeIn: true,
           captions: "partial" as const,
-          memory: memoryEnabled ? ("short" as const) : ("off" as const),
+          memory: identityLevel === "ephemeral" ? ("off" as const) : ("short" as const),
         },
       });
 
@@ -118,7 +120,9 @@ export default function VoicePage() {
         return;
       }
 
-      await connect(configWithUser, user || undefined);
+      // Get current identity from the identity store
+      const identity = identityStore.getIdentity();
+      await connect(configWithUser, user || undefined, identity);
       // Don't set isConnecting to false here - let the connection status handle it
     } catch (err) {
       console.error("Connection failed:", err);
@@ -184,28 +188,9 @@ export default function VoicePage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleMemoryToggle = async () => {
-    if (!memoryEnabled) {
-      setShowPrivacyDialog(true);
-    } else {
-      setMemoryEnabled(false);
-      localStorage.setItem("voice-consent", "DECLINED");
-
-      // Update user consent in database if authenticated
-      // await updateUserConsent('DECLINED');
-    }
-  };
-
-  const handlePrivacyAccept = async () => {
-    setMemoryEnabled(true);
-    localStorage.setItem("voice-consent", "ACCEPTED");
-
-    // Update user consent in database if authenticated
-    // await updateUserConsent('ACCEPTED');
-  };
-
-  const handlePrivacyDecline = () => {
-    // Keep memory disabled
+  const handleIdentityUpgrade = (newLevel: string) => {
+    console.log(`Identity upgraded to: ${newLevel}`);
+    // Identity is automatically managed by the identity store
   };
 
   const getStatusVariant = () => {
@@ -236,13 +221,7 @@ export default function VoicePage() {
 
   const timingStats = getTimingStats();
 
-  // Load memory preference from localStorage
-  useEffect(() => {
-    const savedConsent = localStorage.getItem("voice-consent");
-    if (savedConsent === "ACCEPTED") {
-      setMemoryEnabled(true);
-    }
-  }, []);
+  // Identity is automatically managed by the identity store
 
   // Auto-scroll to bottom when new transcripts arrive
   useEffect(() => {
@@ -268,6 +247,7 @@ export default function VoicePage() {
           <p className="text-muted-foreground">Real-time voice conversation with AI</p>
         </div>
         <div className="flex items-center gap-4">
+          <IdentityBadge />
           {user && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <User className="h-4 w-4" />
@@ -470,50 +450,44 @@ export default function VoicePage() {
             </CardContent>
           </Card>
 
-          {/* Memory Controls */}
+          {/* Identity Management */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="h-5 w-5" />
-                Session Settings
+                Privacy Settings
               </CardTitle>
-              <CardDescription>Control how your conversation data is stored</CardDescription>
+              <CardDescription>Control your privacy level and data storage</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">Save session history</span>
-                    {memoryEnabled && (
-                      <Badge variant="outline" className="text-green-600">
-                        Enabled
-                      </Badge>
-                    )}
+                    <span className="font-medium">Current privacy level</span>
+                    <IdentityBadge />
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {memoryEnabled
-                      ? "Your conversations are being saved securely and will be auto-deleted after 360 days."
-                      : "Your conversations are not being saved. Enable to persist session history."}
+                    {identityLevel === "ephemeral" && "No data is stored anywhere - maximum privacy"}
+                    {identityLevel === "local" && "Data stored only in your browser - never sent to servers"}
+                    {identityLevel === "anonymous" &&
+                      "Temporary server storage with anonymous ID - auto-deleted after 14 days"}
+                    {identityLevel === "pseudonymous" && "Persistent profile with chosen nickname - 90-day retention"}
+                    {identityLevel === "authenticated" && "Full account access with permanent storage"}
                   </p>
                 </div>
-                <Button
-                  variant={memoryEnabled ? "destructive" : "default"}
-                  onClick={handleMemoryToggle}
-                  className="flex items-center gap-2"
-                >
-                  {memoryEnabled ? (
-                    <>
+                <UpgradePrompt
+                  trigger={
+                    <Button variant="outline" className="flex items-center gap-2">
                       <Settings className="h-4 w-4" />
-                      Disable
-                    </>
-                  ) : (
-                    <>
-                      <History className="h-4 w-4" />
-                      Enable
-                    </>
-                  )}
-                </Button>
+                      Change Level
+                    </Button>
+                  }
+                  onUpgrade={handleIdentityUpgrade}
+                />
               </div>
+
+              {/* Retention Info */}
+              <RetentionInfo />
             </CardContent>
           </Card>
 
@@ -540,14 +514,6 @@ export default function VoicePage() {
           {runtimeConfig && <CostDisplay currentModel={runtimeConfig.model} />}
         </div>
       </div>
-
-      {/* Privacy Warning Dialog */}
-      <PrivacyWarningDialog
-        open={showPrivacyDialog}
-        onOpenChange={setShowPrivacyDialog}
-        onAccept={handlePrivacyAccept}
-        onDecline={handlePrivacyDecline}
-      />
     </div>
   );
 }

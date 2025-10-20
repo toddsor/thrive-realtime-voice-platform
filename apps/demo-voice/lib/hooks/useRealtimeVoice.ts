@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { AgentConfig } from "@thrivereflections/realtime-contracts";
+import { AgentConfig, ClientIdentity } from "@thrivereflections/realtime-contracts";
 import { ConsoleLogger } from "@thrivereflections/realtime-observability";
 import { demoStore } from "@/lib/store";
 import {
@@ -58,7 +58,8 @@ export interface UseRealtimeVoiceReturn {
   usageData: UsageData | null;
   connect: (
     config: AgentConfig,
-    user?: { sub: string; email?: string; name?: string; provider?: string }
+    user?: { sub: string; email?: string; name?: string; provider?: string },
+    identity?: ClientIdentity
   ) => Promise<void>;
   disconnect: () => void;
   getTimingStats: () => { ttfa?: number; totalResponseTime?: number };
@@ -192,7 +193,11 @@ export function useRealtimeVoice(): UseRealtimeVoiceReturn {
   );
 
   const connect = useCallback(
-    async (config: AgentConfig, user?: { sub: string; email?: string; name?: string; provider?: string }) => {
+    async (
+      config: AgentConfig,
+      user?: { sub: string; email?: string; name?: string; provider?: string },
+      identity?: ClientIdentity
+    ) => {
       try {
         console.log("🚀 Starting voice connection using platform APIs...");
         setConnectionStatus("connecting");
@@ -516,6 +521,7 @@ export function useRealtimeVoice(): UseRealtimeVoiceReturn {
           getToken,
           onEvent: (event) => eventRouter.routeEvent(event as RealtimeEvent),
           logger: loggerRef.current,
+          identity,
         });
 
         realtimeRef.current = realtime;
