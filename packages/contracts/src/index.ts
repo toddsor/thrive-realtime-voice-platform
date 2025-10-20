@@ -6,3 +6,5 @@ export * from "./AgentConfig";
 export * from "./Events";
 export * from "./PersistenceStore";
 export * from "./ToolCall";
+export * from "./Identity";
+export * from "./ToolPolicy";

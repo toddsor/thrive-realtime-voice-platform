@@ -6,6 +6,12 @@ export interface FeatureFlags {
   captions: boolean;
   tools: boolean;
   memory: "off" | "short" | "long";
+  // Anonymity/identity feature gates
+  anonymityEphemeralEnabled?: boolean;
+  anonymityLocalEnabled?: boolean;
+  anonymityAnonymousEnabled?: boolean;
+  anonymityPseudonymousEnabled?: boolean;
+  anonymityAuthenticatedEnabled?: boolean;
 }
 
 export interface PolicyConfig {
@@ -15,6 +21,13 @@ export interface PolicyConfig {
   rateLimit: {
     sessions: { max: number; window: number };
     toolCalls: { max: number; window: number };
+  };
+  retention?: {
+    ephemeral?: { maxAgeMs: number };
+    local?: { maxAgeMs: number };
+    anonymous?: { maxAgeMs: number };
+    pseudonymous?: { maxAgeMs: number };
+    authenticated?: { maxAgeMs: number };
   };
 }
 
