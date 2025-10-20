@@ -478,3 +478,42 @@ export async function POST(request: NextRequest) {
 ✅ **Connection lifecycle** - Proper connect/disconnect management
 
 > **Note**: The platform handles model configuration, session management, and provides additional features like tool execution, database persistence, and monitoring. See the [complete installation guide](./installation.md) for full setup.
+
+## 3. Privacy & Identity Management
+
+The platform includes a 5-level anonymity system for privacy-conscious users:
+
+### Identity Levels
+
+- **Ephemeral**: No data stored (in-memory only)
+- **Local**: Browser storage only
+- **Anonymous**: Temporary server storage (14 days)
+- **Pseudonymous**: Persistent profile with nickname (90 days)
+- **Authenticated**: Full account access (permanent)
+
+### Basic Usage
+
+```typescript
+import { useIdentity } from "@/lib/hooks/useIdentity";
+import { IdentityBadge, UpgradePrompt } from "@/components/identity";
+
+function MyComponent() {
+  const { level, upgradeToAnonymous } = useIdentity();
+
+  return (
+    <div>
+      <IdentityBadge />
+      <UpgradePrompt onUpgrade={(newLevel) => console.log(newLevel)} />
+    </div>
+  );
+}
+```
+
+### Identity-Aware Features
+
+- Tool execution gated by identity level
+- PII redaction based on privacy level
+- Rate limiting per identity
+- Data retention policies enforced
+
+See [Anonymity Levels Guide](../guides/anonymity-levels.md) for complete documentation.

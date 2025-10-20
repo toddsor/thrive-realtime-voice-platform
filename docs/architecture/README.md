@@ -14,3 +14,4 @@ The Thrive Realtime Voice Platform is built as a TypeScript monorepo with a modu
 2. **Contract-Based Design** - Core interfaces in `@thrivereflections/realtime-contracts`
 3. **Transport Abstraction** - Support for multiple transport protocols
 4. **Independent Applications** - Each app can extend the base schema differently
+5. **Privacy-First Identity** - 5-level anonymity system for user privacy

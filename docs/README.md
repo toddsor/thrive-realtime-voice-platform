@@ -12,6 +12,7 @@ The Thrive Realtime Voice Platform provides a comprehensive set of packages and 
 - 🔌 **Multiple Transports** - WebRTC and WebSocket support
 - 🛠️ **Tool Gateway** - Execute tools with RAG support
 - 📊 **SRE & Monitoring** - Built-in observability and alerting
+- 🔐 **Privacy Levels** - 5-level anonymity system (ephemeral, local, anonymous, pseudonymous, authenticated)
 - 🔐 **Authentication** - Supabase integration
 - 💾 **Database** - Prisma with PostgreSQL
 - 🎨 **UI Components** - React 19 components with shadcn/ui
@@ -20,6 +21,7 @@ The Thrive Realtime Voice Platform provides a comprehensive set of packages and 
 
 - [Getting Started](./getting-started/) - [TL;DR Quick Start](./getting-started/tldr.md)
 - [Developer Guide](./guides/developer-guide.md) - Complete developer guide for building apps
+- [Privacy & Anonymity](./guides/anonymity-levels.md) - 5-level privacy system
 - [Advanced Setup](./getting-started/advanced-setup/) - Production configurations
 - [Architecture Overview](./architecture/) - [Design Principles](./architecture/design-principles.md)
 - [API Reference](./api/)

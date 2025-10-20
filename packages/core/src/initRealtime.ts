@@ -1,4 +1,4 @@
-import { RuntimeConfig, TransportFactory } from "@thrivereflections/realtime-contracts";
+import { RuntimeConfig, TransportFactory, ClientIdentity } from "@thrivereflections/realtime-contracts";
 import { createTransport } from "./transports/factory";
 
 export interface RealtimeDeps {
@@ -10,7 +10,7 @@ export interface RealtimeDeps {
     info: (message: string, meta?: Record<string, unknown>) => void;
     error: (message: string, meta?: Record<string, unknown>) => void;
   };
-  identity?: unknown;
+  identity?: ClientIdentity;
 }
 
 export function initRealtime(config: RuntimeConfig, deps: RealtimeDeps) {

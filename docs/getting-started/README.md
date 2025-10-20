@@ -21,6 +21,7 @@ Welcome to the Thrive Realtime Voice Platform! This guide will help you get up a
 The [Demo App](../../apps/demo-voice/README.md) serves as a complete reference implementation showcasing:
 
 - **Platform Integration**: Proper use of all platform packages
+- **Privacy Features**: 5-level anonymity system with identity management
 - **Security Features**: Rate limiting, content safety, and PII redaction
 - **Extensibility Patterns**: Custom tools, configurations, and patterns
 - **Code Organization**: Clean separation between platform and demo code
@@ -39,6 +40,7 @@ For production applications with specific requirements:
 ## Next Steps
 
 - Read the [Developer Guide](../guides/developer-guide.md) - Complete guide for building applications
+- Learn about [Privacy Levels](../guides/anonymity-levels.md) - User identity and data management
 - Learn about the [Architecture](../architecture/)
 - Explore the [API Reference](../api/)
 - Read the [Deployment Guide](../deployment/)

@@ -8,6 +8,7 @@ export interface LoggerConfig {
 
 export interface InjectableLogger extends Logger {
   setConfig(config: LoggerConfig): void;
+  setIdentity(level?: "ephemeral" | "local" | "anonymous" | "pseudonymous" | "authenticated", id?: string): void;
 }
 
 export class InjectableConsoleLogger implements InjectableLogger {
